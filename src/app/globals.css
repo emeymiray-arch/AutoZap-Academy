@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+:root {
+  --az-bg: #0b1220;
+  --az-bg-elevated: #121a2b;
+  --az-surface: #172033;
+  --az-border: #243049;
+  --az-text: #e8eef9;
+  --az-muted: #93a0b8;
+  --az-accent: #2dd4bf;
+  --az-accent-dim: #0f766e;
+  --az-warning: #f59e0b;
+  --az-danger: #f87171;
+  --az-success: #34d399;
+  --az-font-display: "Segoe UI", "Helvetica Neue", sans-serif;
+  --az-font-body: "Segoe UI", "Helvetica Neue", sans-serif;
+}
+
+@theme inline {
+  --color-background: var(--az-bg);
+  --color-foreground: var(--az-text);
+  --font-sans: var(--az-font-body);
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(45, 212, 191, 0.12), transparent 55%),
+    radial-gradient(900px 500px at 90% 0%, rgba(59, 130, 246, 0.1), transparent 50%),
+    var(--az-bg);
+  color: var(--az-text);
+  font-family: var(--az-font-body);
+  min-height: 100vh;
+}
+
+* {
+  border-color: var(--az-border);
+}

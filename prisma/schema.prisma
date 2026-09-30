@@ -1,0 +1,378 @@
+// AutoZap Academy — Prisma schema
+// Local: SQLite. Production target: PostgreSQL (same models).
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Identity ───────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  SUPERVISOR
+  STUDENT
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String?
+  role         Role     @default(STUDENT)
+  avatarUrl    String?
+  about        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  azBalance           UserAzBalance?
+  azLedgerEntries     AzLedgerEntry[]          @relation("LedgerSubject")
+  azLedgerCreated     AzLedgerEntry[]          @relation("LedgerActor")
+  finalStatus         FinalStatusAssignment?
+  assignmentReviews   AssignmentSubmission[]   @relation("SubmissionReviewer")
+  assignmentSubmits   AssignmentSubmission[]   @relation("SubmissionAuthor")
+  ruleVersionsCreated AzRewardRuleVersion[]    @relation("RuleVersionAuthor")
+  recalculationJobs   AzRecalculationJob[]
+}
+
+// ─── Catalog (minimal for AZ scope) ─────────────────────────
+
+enum ContentStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+model Course {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  title       String
+  description String?
+  status      ContentStatus @default(DRAFT)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  modules     Module[]
+  rewardRules AzRewardRule[]
+}
+
+model Module {
+  id          String        @id @default(cuid())
+  courseId    String
+  slug        String
+  title       String
+  description String?
+  position    Int
+  status      ContentStatus @default(DRAFT)
+  /// Admin override for module maximum AZ (null = use calculated)
+  maxAzOverride Int?
+  useMaxAzOverride Boolean  @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  course      Course         @relation(fields: [courseId], references: [id])
+  lessons     Lesson[]
+  assignments Assignment[]
+  quizzes     Quiz[]
+  rewardRules AzRewardRule[]
+
+  @@unique([courseId, slug])
+  @@index([courseId, position])
+}
+
+model Lesson {
+  id          String        @id @default(cuid())
+  moduleId    String
+  slug        String
+  title       String
+  position    Int
+  status      ContentStatus @default(DRAFT)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  module      Module         @relation(fields: [moduleId], references: [id])
+  rewardRules AzRewardRule[]
+
+  @@unique([moduleId, slug])
+  @@index([moduleId, position])
+}
+
+model Quiz {
+  id        String   @id @default(cuid())
+  moduleId  String
+  title     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  module Module @relation(fields: [moduleId], references: [id])
+}
+
+model Assignment {
+  id          String   @id @default(cuid())
+  moduleId    String
+  title       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  module      Module                 @relation(fields: [moduleId], references: [id])
+  submissions AssignmentSubmission[]
+}
+
+enum SubmissionStatus {
+  DRAFT
+  SUBMITTED
+  IN_REVIEW
+  APPROVED
+  REJECTED
+  REVISION_REQUIRED
+}
+
+model AssignmentSubmission {
+  id           String           @id @default(cuid())
+  assignmentId String
+  userId       String
+  status       SubmissionStatus @default(DRAFT)
+  content      String?
+  feedback     String?
+  /// Awarded AZ amount decided by reviewer (quality-based)
+  awardedAz    Int?
+  qualityLabel String?
+  reviewedById String?
+  reviewedAt   DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id])
+  user       User       @relation("SubmissionAuthor", fields: [userId], references: [id])
+  reviewer   User?      @relation("SubmissionReviewer", fields: [reviewedById], references: [id])
+
+  @@index([assignmentId, userId])
+}
+
+// ─── AZ Domain ──────────────────────────────────────────────
+
+/// Configurable action types — Admin creates rules per type + scope.
+/// Values are identifiers, not hardcoded reward amounts.
+enum AzActionType {
+  LESSON_COMPLETED
+  QUIZ_COMPLETED
+  ASSIGNMENT_REVIEWED
+  SIMULATION_COMPLETED
+  FINAL_SIMULATION
+  CERTIFICATION
+  CUSTOM
+}
+
+enum AzScopeType {
+  GLOBAL
+  COURSE
+  MODULE
+  LESSON
+}
+
+enum AzLedgerKind {
+  INITIAL
+  REPEAT
+  REGRADE
+  RULE_RECALC
+  AUTO_REDUCTION
+}
+
+enum AzRuleApplyMode {
+  FUTURE_ONLY
+  RECALCULATE_EXISTING
+}
+
+enum FinalStatus {
+  TOP_1
+  TOP_2
+  TOP_3
+  MANAGER
+}
+
+enum TieBreakCriterion {
+  TOTAL_AZ
+  MODULES_COMPLETED
+  ASSIGNMENTS_AVG_AZ
+  QUIZ_AVG_AZ
+  SIMULATION_AVG_AZ
+  CERTIFICATION_DATE
+}
+
+/// Logical reward rule (stable id across versions).
+model AzRewardRule {
+  id          String       @id @default(cuid())
+  actionType  AzActionType
+  scopeType   AzScopeType  @default(GLOBAL)
+  courseId    String?
+  moduleId    String?
+  lessonId    String?
+  name        String
+  description String?
+  active      Boolean      @default(true)
+  currentVersion Int       @default(1)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  course   Course? @relation(fields: [courseId], references: [id])
+  module   Module? @relation(fields: [moduleId], references: [id])
+  lesson   Lesson? @relation(fields: [lessonId], references: [id])
+
+  versions AzRewardRuleVersion[]
+  ledger   AzLedgerEntry[]
+
+  @@index([actionType, active])
+  @@index([courseId, moduleId, lessonId])
+}
+
+/// Immutable versioned snapshot of a reward rule.
+model AzRewardRuleVersion {
+  id                   String          @id @default(cuid())
+  ruleId               String
+  version              Int
+  maxAz                Int
+  allowsPartial        Boolean         @default(false)
+  allowsRepeat         Boolean         @default(false)
+  qualityDependent     Boolean         @default(false)
+  /// JSON conditions evaluated by domain (kept flexible; empty = always eligible)
+  conditionsJson       String          @default("{}")
+  /// Auto-reduction config JSON (only applied if present & active on rule)
+  autoReductionJson    String?
+  applyModeOnPublish   AzRuleApplyMode @default(FUTURE_ONLY)
+  active               Boolean         @default(true)
+  createdById          String?
+  createdAt            DateTime        @default(now())
+  note                 String?
+
+  rule      AzRewardRule      @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  createdBy User?             @relation("RuleVersionAuthor", fields: [createdById], references: [id])
+  ranges    AzQualityRange[]
+  ledger    AzLedgerEntry[]
+
+  @@unique([ruleId, version])
+}
+
+model AzQualityRange {
+  id          String @id @default(cuid())
+  versionId   String
+  label       String
+  minAz       Int
+  maxAz       Int
+  criteria    String?
+  sortOrder   Int    @default(0)
+
+  version AzRewardRuleVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@index([versionId, sortOrder])
+}
+
+/// Academy-wide level definitions (not per-module).
+model AzLevelRule {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  /// Inclusive lower bound of AZ for this level
+  minAz       Int
+  /// Exclusive upper bound; null = open-ended (top level)
+  maxAz       Int?
+  sortOrder   Int
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  balances UserAzBalance[]
+}
+
+/// Cached balance — ledger is source of truth.
+model UserAzBalance {
+  userId           String   @id
+  balance          Int      @default(0)
+  levelRuleId      String?
+  /// Max AZ currently available across published rules/scopes for this student context
+  maxAvailableAz   Int      @default(0)
+  updatedAt        DateTime @updatedAt
+
+  user  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  level AzLevelRule? @relation(fields: [levelRuleId], references: [id])
+}
+
+/// Append-only AZ ledger. Never delete rows.
+model AzLedgerEntry {
+  id              String       @id @default(cuid())
+  userId          String
+  /// Signed delta applied to balance (+award / -reduction / regrade delta)
+  delta           Int
+  balanceAfter    Int
+  kind            AzLedgerKind
+  actionType      AzActionType
+  sourceType      String
+  sourceId        String
+  ruleId          String?
+  ruleVersionId   String?
+  maxAz           Int?
+  awardedAz       Int?
+  previousAwardedAz Int?
+  qualityLabel    String?
+  reason          String
+  idempotencyKey  String       @unique
+  createdById     String?
+  createdAt       DateTime     @default(now())
+
+  user        User                 @relation("LedgerSubject", fields: [userId], references: [id], onDelete: Cascade)
+  createdBy   User?                @relation("LedgerActor", fields: [createdById], references: [id])
+  rule        AzRewardRule?        @relation(fields: [ruleId], references: [id])
+  ruleVersion AzRewardRuleVersion? @relation(fields: [ruleVersionId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([sourceType, sourceId])
+  @@index([ruleId])
+}
+
+model AzRecalculationJob {
+  id           String   @id @default(cuid())
+  ruleId       String
+  fromVersion  Int
+  toVersion    Int
+  status       String   @default("PENDING")
+  createdById  String?
+  resultJson   String?
+  createdAt    DateTime @default(now())
+  completedAt  DateTime?
+
+  createdBy User? @relation(fields: [createdById], references: [id])
+}
+
+/// Configurable tie-break for final ranking when AZ are equal.
+model RankingTieBreakRule {
+  id         String           @id @default(cuid())
+  priority   Int
+  criterion  TieBreakCriterion
+  descending Boolean          @default(true)
+  active     Boolean          @default(true)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@unique([priority])
+}
+
+model FinalStatusAssignment {
+  userId     String      @id
+  status     FinalStatus
+  rank       Int?
+  note       String?
+  assignedAt DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SystemSetting {
+  key       String   @id
+  valueJson String
+  updatedAt DateTime @updatedAt
+}
