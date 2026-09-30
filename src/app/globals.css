@@ -1,37 +1,197 @@
 @import "tailwindcss";
 
 :root {
-  --az-bg: #0b1220;
-  --az-bg-elevated: #121a2b;
-  --az-surface: #172033;
-  --az-border: #243049;
-  --az-text: #e8eef9;
-  --az-muted: #93a0b8;
-  --az-accent: #2dd4bf;
-  --az-accent-dim: #0f766e;
-  --az-warning: #f59e0b;
-  --az-danger: #f87171;
-  --az-success: #34d399;
-  --az-font-display: "Segoe UI", "Helvetica Neue", sans-serif;
-  --az-font-body: "Segoe UI", "Helvetica Neue", sans-serif;
+  --ink: #0b1220;
+  --ink-soft: #1a2336;
+  --paper: #eef2f7;
+  --paper-2: #f7f9fc;
+  --line: #d5dde8;
+  --line-strong: #b7c2d3;
+  --muted: #5b6b82;
+  --text: #0b1220;
+  --accent: #ff6a00;
+  --accent-deep: #d45500;
+  --signal: #0066ff;
+  --ok: #0f7a4c;
+  --bad: #c62828;
+  --radius: 2px;
 }
 
 @theme inline {
-  --color-background: var(--az-bg);
-  --color-foreground: var(--az-text);
-  --font-sans: var(--az-font-body);
-}
-
-body {
-  background:
-    radial-gradient(1200px 600px at 10% -10%, rgba(45, 212, 191, 0.12), transparent 55%),
-    radial-gradient(900px 500px at 90% 0%, rgba(59, 130, 246, 0.1), transparent 50%),
-    var(--az-bg);
-  color: var(--az-text);
-  font-family: var(--az-font-body);
-  min-height: 100vh;
+  --color-background: var(--paper);
+  --color-foreground: var(--text);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
 }
 
 * {
-  border-color: var(--az-border);
+  border-color: var(--line);
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--text);
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(90deg, rgba(11, 18, 32, 0.035) 1px, transparent 1px),
+    linear-gradient(rgba(11, 18, 32, 0.035) 1px, transparent 1px),
+    radial-gradient(900px 420px at 100% -10%, rgba(255, 106, 0, 0.12), transparent 55%),
+    radial-gradient(700px 380px at -5% 20%, rgba(0, 102, 255, 0.08), transparent 50%),
+    linear-gradient(180deg, var(--paper-2), var(--paper));
+  background-size:
+    48px 48px,
+    48px 48px,
+    auto,
+    auto,
+    auto;
+  font-family: var(--font-body), sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: rgba(255, 106, 0, 0.2);
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes lane-sweep {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 96px 0;
+  }
+}
+
+.az-rise {
+  animation: rise-in 0.55s ease-out both;
+}
+
+.az-rise-delay {
+  animation: rise-in 0.65s ease-out 0.12s both;
+}
+
+.az-progress-fill {
+  transform-origin: left center;
+  animation: bar-grow 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.az-lane {
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 18px,
+    rgba(255, 255, 255, 0.08) 18px,
+    rgba(255, 255, 255, 0.08) 20px
+  );
+  background-size: 96px 100%;
+  animation: lane-sweep 12s linear infinite;
+}
+
+.az-input {
+  width: 100%;
+  border: 1px solid var(--line-strong);
+  background: white;
+  color: var(--ink);
+  padding: 0.65rem 0.8rem;
+  font: inherit;
+  border-radius: var(--radius);
+}
+
+.az-input:focus {
+  outline: 2px solid rgba(255, 106, 0, 0.35);
+  outline-offset: 1px;
+}
+
+.az-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 0;
+  background: var(--ink);
+  color: white;
+  padding: 0.7rem 1.1rem;
+  font: inherit;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  border-radius: var(--radius);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.az-btn:hover {
+  background: var(--ink-soft);
+}
+
+.az-btn-accent {
+  background: var(--accent);
+  color: white;
+}
+
+.az-btn-accent:hover {
+  background: var(--accent-deep);
+}
+
+.az-btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+}
+
+.az-btn-ghost:hover {
+  background: white;
+}
+
+.az-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.az-table th {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.az-table td {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.az-table tr:hover td {
+  background: rgba(255, 255, 255, 0.55);
 }

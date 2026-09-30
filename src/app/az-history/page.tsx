@@ -11,13 +11,14 @@ export default async function AzHistoryPage() {
 
   return (
     <AppShell
+      eyebrow="Ledger"
       title="История AZ"
-      subtitle="Каждое изменение AZ сохраняется в ledger: действие, максимум, факт, качество, причина, правило."
+      subtitle="Каждая операция сохраняется: действие, максимум, факт, качество, причина, версия правила."
     >
-      <div className="mb-8">
-        <AzProgressCard summary={summary} />
+      <AzProgressCard summary={summary} />
+      <div className="mt-12">
+        <AzHistoryList items={history} />
       </div>
-      <AzHistoryList items={history} />
     </AppShell>
   );
 }
