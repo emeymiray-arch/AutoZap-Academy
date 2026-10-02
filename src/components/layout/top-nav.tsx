@@ -30,7 +30,7 @@ export function TopNav() {
           >
             {item.label}
             {active ? (
-              <span className="absolute inset-x-3 -bottom-[1px] h-[2px] bg-[var(--accent)]" />
+              <span className="az-brand-bar absolute inset-x-3 -bottom-[1px] h-[3px]" />
             ) : null}
           </Link>
         );

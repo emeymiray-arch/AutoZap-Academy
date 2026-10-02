@@ -21,7 +21,7 @@ export function AzHistoryList({ items }: { items: AzHistoryItem[] }) {
           <span
             className="absolute -left-[1.64rem] top-1.5 h-2.5 w-2.5 rounded-[1px]"
             style={{
-              background: item.delta >= 0 ? "var(--accent)" : "var(--bad)",
+              background: item.delta >= 0 ? "var(--brand-grad)" : "var(--bad)",
             }}
           />
           <div className="flex flex-wrap items-baseline justify-between gap-3">

@@ -1,20 +1,23 @@
 @import "tailwindcss";
 
 :root {
-  --ink: #0b1220;
-  --ink-soft: #1a2336;
-  --paper: #eef2f7;
-  --paper-2: #f7f9fc;
-  --line: #d5dde8;
-  --line-strong: #b7c2d3;
-  --muted: #5b6b82;
-  --text: #0b1220;
-  --accent: #ff6a00;
-  --accent-deep: #d45500;
-  --signal: #0066ff;
+  /* Sampled from AutoZap mark: cyan #03CDFD → royal #0360FD */
+  --cyan: #03cdfd;
+  --blue: #0360fd;
+  --ink: #041a4a;
+  --ink-soft: #06286e;
+  --paper: #f5f9ff;
+  --paper-2: #ffffff;
+  --line: #d7e6f8;
+  --line-strong: #b7d0ee;
+  --muted: #4a678c;
+  --text: #041a4a;
+  --accent: #03cdfd;
+  --accent-deep: #0360fd;
   --ok: #0f7a4c;
   --bad: #c62828;
-  --radius: 2px;
+  --radius: 999px;
+  --brand-grad: linear-gradient(145deg, #4ee0ff 0%, #03cdfd 32%, #0090ff 64%, #0360fd 100%);
 }
 
 @theme inline {
@@ -38,17 +41,9 @@ body {
   color: var(--text);
   background-color: var(--paper);
   background-image:
-    linear-gradient(90deg, rgba(11, 18, 32, 0.035) 1px, transparent 1px),
-    linear-gradient(rgba(11, 18, 32, 0.035) 1px, transparent 1px),
-    radial-gradient(900px 420px at 100% -10%, rgba(255, 106, 0, 0.12), transparent 55%),
-    radial-gradient(700px 380px at -5% 20%, rgba(0, 102, 255, 0.08), transparent 50%),
-    linear-gradient(180deg, var(--paper-2), var(--paper));
-  background-size:
-    48px 48px,
-    48px 48px,
-    auto,
-    auto,
-    auto;
+    radial-gradient(900px 480px at 108% -8%, rgba(3, 205, 253, 0.16), transparent 55%),
+    radial-gradient(720px 420px at -8% 12%, rgba(3, 96, 253, 0.1), transparent 52%),
+    linear-gradient(180deg, #ffffff 0%, var(--paper) 220px);
   font-family: var(--font-body), sans-serif;
 }
 
@@ -58,7 +53,7 @@ a {
 }
 
 ::selection {
-  background: rgba(255, 106, 0, 0.2);
+  background: rgba(3, 205, 253, 0.28);
 }
 
 @keyframes rise-in {
@@ -81,15 +76,6 @@ a {
   }
 }
 
-@keyframes lane-sweep {
-  from {
-    background-position: 0 0;
-  }
-  to {
-    background-position: 96px 0;
-  }
-}
-
 .az-rise {
   animation: rise-in 0.55s ease-out both;
 }
@@ -101,18 +87,12 @@ a {
 .az-progress-fill {
   transform-origin: left center;
   animation: bar-grow 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  background: var(--brand-grad);
 }
 
-.az-lane {
-  background-image: repeating-linear-gradient(
-    90deg,
-    transparent,
-    transparent 18px,
-    rgba(255, 255, 255, 0.08) 18px,
-    rgba(255, 255, 255, 0.08) 20px
-  );
-  background-size: 96px 100%;
-  animation: lane-sweep 12s linear infinite;
+.az-brand-bar {
+  height: 4px;
+  background: var(--brand-grad);
 }
 
 .az-input {
@@ -122,11 +102,11 @@ a {
   color: var(--ink);
   padding: 0.65rem 0.8rem;
   font: inherit;
-  border-radius: var(--radius);
+  border-radius: 12px;
 }
 
 .az-input:focus {
-  outline: 2px solid rgba(255, 106, 0, 0.35);
+  outline: 2px solid rgba(3, 205, 253, 0.55);
   outline-offset: 1px;
 }
 
@@ -138,26 +118,22 @@ a {
   border: 0;
   background: var(--ink);
   color: white;
-  padding: 0.7rem 1.1rem;
+  padding: 0.7rem 1.15rem;
   font: inherit;
   font-weight: 600;
   letter-spacing: 0.01em;
   cursor: pointer;
   border-radius: var(--radius);
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition: filter 0.2s ease, transform 0.2s ease;
 }
 
 .az-btn:hover {
-  background: var(--ink-soft);
+  filter: brightness(1.08);
 }
 
 .az-btn-accent {
-  background: var(--accent);
+  background: var(--brand-grad);
   color: white;
-}
-
-.az-btn-accent:hover {
-  background: var(--accent-deep);
 }
 
 .az-btn-ghost {
@@ -193,5 +169,5 @@ a {
 }
 
 .az-table tr:hover td {
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(3, 205, 253, 0.06);
 }

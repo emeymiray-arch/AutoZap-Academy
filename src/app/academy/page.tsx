@@ -105,7 +105,8 @@ export default async function AcademyPage() {
                 )}
 
                 {mod.position === 1 && assignmentPreview ? (
-                  <div className="mt-6 border-l-2 border-[var(--accent)] bg-white/60 py-4 pl-5 pr-4">
+                  <div className="mt-6 overflow-hidden rounded-r-xl bg-white/70 py-4 pl-5 pr-4">
+                    <div className="az-brand-bar mb-3 w-16" />
                     <p className="text-[0.7rem] font-bold uppercase tracking-[0.18em] text-[var(--accent-deep)]">
                       Правила AZ · практика
                     </p>

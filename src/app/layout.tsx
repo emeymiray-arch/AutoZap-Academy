@@ -17,6 +17,10 @@ const body = Manrope({
 export const metadata: Metadata = {
   title: "AutoZap Academy",
   description: "Корпоративная обучающая платформа AutoZap",
+  icons: {
+    icon: "/brand/favicon.png",
+    apple: "/brand/autozap-mark.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -4,7 +4,7 @@ import type { StudentAzSummary } from "@server/az/az-service";
 export function AzProgressCard({ summary }: { summary: StudentAzSummary }) {
   return (
     <section className="relative overflow-hidden border-y border-[var(--line-strong)] bg-white/70 py-8">
-      <div className="pointer-events-none absolute -right-8 top-0 h-full w-1/3 bg-[linear-gradient(120deg,transparent,rgba(255,106,0,0.08))]" />
+      <div className="pointer-events-none absolute -right-8 top-0 h-full w-1/3 bg-[linear-gradient(120deg,transparent,rgba(3,205,253,0.16))]" />
       <div className="relative grid gap-8 md:grid-cols-[1.4fr_0.8fr]">
         <div>
           <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em] text-[var(--muted)]">
@@ -29,9 +29,9 @@ export function AzProgressCard({ summary }: { summary: StudentAzSummary }) {
                   : "Максимальный уровень"}
               </span>
             </div>
-            <div className="h-[3px] overflow-hidden bg-[var(--line)]">
+            <div className="h-[4px] overflow-hidden bg-[var(--line)]">
               <div
-                className="az-progress-fill h-full bg-[var(--accent)]"
+                className="az-progress-fill h-full"
                 style={{ width: `${summary.progressToNextLevelPercent}%` }}
               />
             </div>
