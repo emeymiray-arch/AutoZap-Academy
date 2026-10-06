@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Manrope, Unbounded } from "next/font/google";
+import { AuroraScene } from "@/components/layout/aurora-scene";
 import "./globals.css";
 
 const display = Unbounded({
@@ -23,10 +24,20 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru" className={`${display.variable} ${body.variable}`}>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <AuroraScene />
+        <div className="az-app">{children}</div>
+      </body>
     </html>
   );
 }

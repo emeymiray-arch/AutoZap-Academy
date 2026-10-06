@@ -10,7 +10,7 @@ export function AzProgressCard({ summary }: { summary: StudentAzSummary }) {
             Баланс AZ
           </p>
           <p
-            className="mt-3 text-5xl font-extrabold tracking-tight tabular-nums text-[var(--ink)] sm:text-6xl"
+            className="mt-3 text-5xl font-extrabold tracking-tight tabular-nums text-white sm:text-6xl"
             style={{ fontFamily: "var(--font-display), sans-serif" }}
           >
             {formatAz(summary.balance)}
@@ -22,13 +22,13 @@ export function AzProgressCard({ summary }: { summary: StudentAzSummary }) {
           <div className="mt-6">
             <div className="mb-2 flex justify-between text-sm text-[var(--muted)]">
               <span>До следующего уровня</span>
-              <span className="font-medium text-[var(--ink)]">
+              <span className="font-medium text-white">
                 {summary.nextLevel
                   ? `${formatAz(summary.nextLevel.azNeeded)} AZ → ${summary.nextLevel.name}`
                   : "Максимальный уровень"}
               </span>
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-[rgba(3,96,253,0.1)]">
+            <div className="h-2 overflow-hidden rounded-full bg-white/10">
               <div
                 className="az-progress-fill h-full rounded-full"
                 style={{ width: `${summary.progressToNextLevelPercent}%` }}
@@ -37,12 +37,12 @@ export function AzProgressCard({ summary }: { summary: StudentAzSummary }) {
           </div>
         </div>
 
-        <div className="flex flex-col justify-end border-t border-[rgba(3,96,253,0.1)] pt-6 md:border-l md:border-t-0 md:pl-8 md:pt-0">
+        <div className="flex flex-col justify-end border-t border-white/10 pt-6 md:border-l md:border-t-0 md:pl-8 md:pt-0">
           <p className="text-[0.7rem] font-bold uppercase tracking-[0.18em] text-[var(--muted)]">
             Уровень Академии
           </p>
           <p
-            className="mt-2 text-4xl font-extrabold text-[var(--ink)]"
+            className="mt-2 text-4xl font-extrabold text-white"
             style={{ fontFamily: "var(--font-display), sans-serif" }}
           >
             {summary.level?.name ?? "—"}

@@ -48,8 +48,8 @@ export function SideNav({ role }: { role: Role }) {
             className={cn(
               "flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm font-medium transition",
               active
-                ? "bg-[rgba(3,96,253,0.12)] text-[var(--accent-deep)]"
-                : "text-[var(--muted)] hover:bg-white/50 hover:text-[var(--ink)]",
+                ? "border border-[rgba(3,205,253,0.35)] bg-[rgba(3,205,253,0.16)] text-white shadow-[0_0_24px_rgba(3,205,253,0.25)]"
+                : "text-[var(--muted)] hover:bg-white/5 hover:text-white",
             )}
           >
             <Icon className="h-4 w-4 shrink-0" />

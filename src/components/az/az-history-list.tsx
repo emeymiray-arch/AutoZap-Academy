@@ -26,7 +26,7 @@ export function AzHistoryList({ items }: { items: AzHistoryItem[] }) {
           />
           <div className="flex flex-wrap items-baseline justify-between gap-3">
             <div>
-              <p className="font-semibold text-[var(--ink)]">
+              <p className="font-semibold text-white">
                 {item.sourceType} · {item.actionType}
               </p>
               <p className="mt-1 text-xs uppercase tracking-[0.14em] text-[var(--muted)]">
@@ -82,7 +82,7 @@ export function AzHistoryList({ items }: { items: AzHistoryItem[] }) {
             ) : null}
           </dl>
 
-          <p className="mt-4 text-sm leading-relaxed text-[var(--ink)]">
+          <p className="mt-4 text-sm leading-relaxed text-white">
             <span className="text-[var(--muted)]">Причина — </span>
             {item.reason}
           </p>

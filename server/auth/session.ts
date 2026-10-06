@@ -5,7 +5,30 @@ import { prisma } from "@server/db";
 
 export const SESSION_COOKIE = "az_session_user";
 
-export type SessionUser = Pick<User, "id" | "email" | "name" | "role" | "avatarUrl" | "about">;
+export type SessionUser = Pick<
+  User,
+  | "id"
+  | "email"
+  | "name"
+  | "nickname"
+  | "role"
+  | "avatarUrl"
+  | "about"
+  | "consentAcceptedAt"
+  | "mustChangePassword"
+>;
+
+const sessionSelect = {
+  id: true,
+  email: true,
+  name: true,
+  nickname: true,
+  role: true,
+  avatarUrl: true,
+  about: true,
+  consentAcceptedAt: true,
+  mustChangePassword: true,
+} as const;
 
 export async function getSessionUserId(): Promise<string | null> {
   const jar = await cookies();
@@ -17,26 +40,28 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   if (!userId) return null;
   return prisma.user.findUnique({
     where: { id: userId },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      role: true,
-      avatarUrl: true,
-      about: true,
-    },
+    select: sessionSelect,
   });
 }
 
 export async function requireUser(): Promise<SessionUser> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  if (!user.consentAcceptedAt) redirect("/consent");
+  if (user.mustChangePassword) redirect("/onboarding");
   return user;
 }
 
 export async function requireAdmin(): Promise<SessionUser> {
   const user = await requireUser();
   if (user.role !== "ADMIN") redirect("/dashboard");
+  return user;
+}
+
+/** Soft gate for consent/onboarding pages themselves */
+export async function requireLoggedIn(): Promise<SessionUser> {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
   return user;
 }
 

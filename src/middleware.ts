@@ -9,8 +9,10 @@ export function middleware(request: NextRequest) {
 
   const isPublic =
     pathname === "/login" ||
+    pathname === "/privacy" ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/brand") ||
+    pathname.startsWith("/bg") ||
     pathname === "/favicon.ico";
 
   if (!session && !isPublic) {
@@ -29,5 +31,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|brand|favicon.ico).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|brand|bg|favicon.ico).*)"],
 };

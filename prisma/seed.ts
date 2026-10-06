@@ -1,9 +1,18 @@
 import { PrismaClient } from "@prisma/client";
 import { AZService } from "../server/az/az-service";
+import { hashPassword } from "../server/auth/password";
 
 const prisma = new PrismaClient();
 
 async function main() {
+  await prisma.chatMessage.deleteMany();
+  await prisma.chatParticipant.deleteMany();
+  await prisma.chatThread.deleteMany();
+  await prisma.newsPost.deleteMany();
+  await prisma.activityAward.deleteMany();
+  await prisma.activityVote.deleteMany();
+  await prisma.activityReply.deleteMany();
+  await prisma.activityPost.deleteMany();
   await prisma.azLedgerEntry.deleteMany();
   await prisma.userAzBalance.deleteMany();
   await prisma.finalStatusAssignment.deleteMany();
@@ -27,7 +36,11 @@ async function main() {
       id: process.env.DEMO_ADMIN_ID ?? "admin-demo-001",
       email: "admin@autozap.academy",
       name: "Admin AutoZap",
+      nickname: "admin",
       role: "ADMIN",
+      passwordHash: hashPassword("Admin123!"),
+      consentAcceptedAt: new Date(),
+      mustChangePassword: false,
     },
   });
 
@@ -36,7 +49,11 @@ async function main() {
       id: process.env.DEMO_STUDENT_ID ?? "student-demo-001",
       email: "ivan@autozap.academy",
       name: "Иван",
+      nickname: "ivan",
       role: "STUDENT",
+      passwordHash: hashPassword("Student123!"),
+      consentAcceptedAt: new Date(),
+      mustChangePassword: false,
     },
   });
 
@@ -45,7 +62,11 @@ async function main() {
       id: "student-demo-002",
       email: "maria@autozap.academy",
       name: "Мария",
+      nickname: "maria",
       role: "STUDENT",
+      passwordHash: hashPassword("Student123!"),
+      consentAcceptedAt: new Date(),
+      mustChangePassword: false,
     },
   });
 
@@ -54,7 +75,11 @@ async function main() {
       id: "student-demo-003",
       email: "alex@autozap.academy",
       name: "Алекс",
+      nickname: "alex",
       role: "STUDENT",
+      passwordHash: hashPassword("Student123!"),
+      consentAcceptedAt: new Date(),
+      mustChangePassword: false,
     },
   });
 
@@ -266,9 +291,19 @@ async function main() {
   await az.recalculateLevel(student2.id);
   await az.recalculateLevel(student3.id);
 
+  await prisma.newsPost.create({
+    data: {
+      authorId: admin.id,
+      title: "Добро пожаловать в AutoZap Academy",
+      body: "Следите за новостями здесь. Вопросы — на доске активности. Админ всегда в закрепе в чатах.",
+    },
+  });
+
   console.log("Seed complete:", {
     admin: admin.email,
+    adminPassword: "Admin123!",
     student: student.email,
+    studentPassword: "Student123!",
     module1: module1.title,
     lessons: lessons.length,
   });

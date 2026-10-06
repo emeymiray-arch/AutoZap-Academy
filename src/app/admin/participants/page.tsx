@@ -1,8 +1,9 @@
 import { AppShell } from "@/components/layout/app-shell";
-import { createParticipantAction } from "@/app/actions/auth";
-import { requireAdmin, initials } from "@server/auth/session";
+import { CreateParticipantForm } from "@/components/admin/create-participant-form";
+import { requireAdmin } from "@server/auth/session";
 import { prisma } from "@server/db";
 import { formatAz } from "@/lib/utils";
+import { displayName, initials } from "@/lib/user";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -20,60 +21,21 @@ export default async function AdminParticipantsPage() {
     <AppShell
       user={admin}
       title="Участники"
-      subtitle="Только администратор создаёт профили. Каждый участник входит в свой личный кабинет."
     >
       <div className="grid gap-5 lg:grid-cols-[1fr_1.2fr]">
-        <section className="az-glass-strong p-5">
-          <h2
-            className="mb-4 text-lg font-bold"
-            style={{ fontFamily: "var(--font-display), sans-serif" }}
-          >
-            Создать участника
-          </h2>
-          <form action={createParticipantAction} className="space-y-3">
-            <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
-              Имя
-              <input name="name" required className="az-input az-input-rect mt-2" placeholder="Иван Петров" />
-            </label>
-            <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
-              Email
-              <input
-                name="email"
-                type="email"
-                required
-                className="az-input az-input-rect mt-2"
-                placeholder="ivan@autozap.academy"
-              />
-            </label>
-            <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
-              О себе (необязательно)
-              <textarea
-                name="about"
-                rows={3}
-                className="az-input az-input-rect mt-2"
-                placeholder="Краткое описание"
-              />
-            </label>
-            <button type="submit" className="az-btn az-btn-accent w-full">
-              Создать профиль
-            </button>
-          </form>
+        <section>
+          <h2 className="mb-3 text-base font-bold">Создать участника</h2>
+          <CreateParticipantForm />
         </section>
 
-        <section className="az-glass-strong overflow-hidden p-2 sm:p-4">
-          <h2
-            className="mb-3 px-2 text-lg font-bold"
-            style={{ fontFamily: "var(--font-display), sans-serif" }}
-          >
-            Список участников ({students.length})
-          </h2>
-          <div className="overflow-x-auto">
-            <table className="az-table min-w-[520px]">
+        <section>
+          <h2 className="mb-2 text-base font-bold">Список ({students.length})</h2>
+          <div className="w-full max-w-full overflow-x-auto">
+            <table className="az-table w-full min-w-0 text-sm sm:min-w-[480px]">
               <thead>
                 <tr>
                   <th>Участник</th>
                   <th>AZ</th>
-                  <th>Уровень</th>
                   <th></th>
                 </tr>
               </thead>
@@ -83,31 +45,38 @@ export default async function AdminParticipantsPage() {
                   return (
                     <tr key={s.id}>
                       <td>
-                        <div className="flex items-center gap-3">
-                          <span className="az-brand-grad grid h-9 w-9 place-items-center rounded-full text-xs font-bold text-white">
-                            {initials(s.name)}
-                          </span>
+                        <div className="flex items-center gap-2">
+                          {s.avatarUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={s.avatarUrl}
+                              alt=""
+                              className="h-8 w-8 rounded-full object-cover"
+                            />
+                          ) : (
+                            <span className="az-brand-grad grid h-8 w-8 place-items-center rounded-full text-[0.6rem] font-bold text-white">
+                              {initials(displayName(s))}
+                            </span>
+                          )}
                           <div>
-                            <p className="font-semibold">{s.name}</p>
-                            <p className="text-xs text-[var(--muted)]">{s.email}</p>
+                            <p className="text-sm font-semibold">{displayName(s)}</p>
+                            <p className="text-[0.65rem] text-[var(--muted)]">{s.email}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="tabular-nums font-semibold">
+                      <td className="tabular-nums text-sm font-semibold">
                         {formatAz(s.azBalance?.balance ?? 0)}
-                      </td>
-                      <td>
-                        <span className={`az-badge ${archived ? "az-badge-muted" : "az-badge-info"}`}>
-                          {archived ? "Архив" : (s.azBalance?.level?.name ?? "—")}
-                        </span>
                       </td>
                       <td>
                         <Link
                           href={`/participants/${s.id}`}
-                          className="text-sm font-semibold text-[var(--accent-deep)]"
+                          className="text-xs text-[var(--cyan)] hover:underline"
                         >
                           Профиль
                         </Link>
+                        {archived ? (
+                          <span className="ml-2 az-badge az-badge-muted">архив</span>
+                        ) : null}
                       </td>
                     </tr>
                   );
