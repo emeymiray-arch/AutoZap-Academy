@@ -1,13 +1,20 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@server/db";
-import { SESSION_COOKIE, requireAdmin, requireLoggedIn, requireUser } from "@server/auth/session";
+import {
+  createUserSession,
+  destroyUserSession,
+  requireAdmin,
+  requireLoggedIn,
+  requireUser,
+} from "@server/auth/session";
+import { assertLoginAllowed, clearLoginFailures } from "@server/auth/rate-limit";
 import { generateTempPassword, hashPassword, verifyPassword } from "@server/auth/password";
 import { createAZService } from "@server/az/az-service";
+import { sanitizeAvatarUrl } from "@/lib/sanitize";
 
 export type AuthState = { error?: string; ok?: boolean; tempPassword?: string };
 
@@ -21,6 +28,11 @@ export async function loginAction(_prev: AuthState, formData: FormData): Promise
     return { error: "Введите email и пароль" };
   }
 
+  const limited = assertLoginAllowed(`login:${email}`);
+  if (!limited.ok) {
+    return { error: `Слишком много попыток. Подождите ${limited.retryAfterSec} сек.` };
+  }
+
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user?.passwordHash || !verifyPassword(password, user.passwordHash)) {
     return { error: "Неверный email или пароль" };
@@ -30,13 +42,8 @@ export async function loginAction(_prev: AuthState, formData: FormData): Promise
     return { error: "Аккаунт отключён. Обратитесь к администратору." };
   }
 
-  const jar = await cookies();
-  jar.set(SESSION_COOKIE, user.id, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
-  });
+  clearLoginFailures(`login:${email}`);
+  await createUserSession(user);
 
   if (!user.consentAcceptedAt) redirect("/consent");
   if (user.mustChangePassword) redirect("/onboarding");
@@ -44,8 +51,7 @@ export async function loginAction(_prev: AuthState, formData: FormData): Promise
 }
 
 export async function logoutAction() {
-  const jar = await cookies();
-  jar.delete(SESSION_COOKIE);
+  await destroyUserSession();
   redirect("/login");
 }
 
@@ -86,17 +92,24 @@ export async function completeOnboardingAction(
     });
     if (nickTaken) return { error: "Этот ник уже занят" };
 
-    await prisma.user.update({
+    const avatarUrl = sanitizeAvatarUrl(parsed.avatarUrl);
+    if (parsed.avatarUrl && !avatarUrl) {
+      return { error: "Некорректный аватар (только изображение PNG/JPEG/WebP или HTTPS URL)" };
+    }
+
+    const updated = await prisma.user.update({
       where: { id: user.id },
       data: {
         name: parsed.name,
         nickname: parsed.nickname,
         passwordHash: hashPassword(parsed.password),
         mustChangePassword: false,
-        avatarUrl: parsed.avatarUrl || user.avatarUrl,
+        avatarUrl: avatarUrl || user.avatarUrl,
+        sessionVersion: { increment: 1 },
       },
     });
 
+    await createUserSession(updated);
     redirect("/dashboard");
   } catch (e) {
     if (e && typeof e === "object" && "digest" in e) throw e;
@@ -129,13 +142,18 @@ export async function updateProfileAction(
     });
     if (nickTaken) return { error: "Этот ник уже занят" };
 
+    const avatarUrl = sanitizeAvatarUrl(parsed.avatarUrl);
+    if (parsed.avatarUrl && !avatarUrl) {
+      return { error: "Некорректный аватар (только изображение PNG/JPEG/WebP или HTTPS URL)" };
+    }
+
     await prisma.user.update({
       where: { id: user.id },
       data: {
         name: parsed.name,
         nickname: parsed.nickname,
         about: parsed.about ?? null,
-        avatarUrl: parsed.avatarUrl || null,
+        avatarUrl,
       },
     });
 
@@ -211,6 +229,7 @@ export async function archiveParticipantAction(formData: FormData) {
       about: user.about?.startsWith("[ARCHIVED]")
         ? user.about
         : `[ARCHIVED] ${user.about ?? ""}`.trim(),
+      sessionVersion: { increment: 1 },
     },
   });
 

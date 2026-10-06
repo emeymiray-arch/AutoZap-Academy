@@ -23,9 +23,10 @@ export function NotificationsBell() {
   return (
     <Link
       href="/notifications"
-      className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[var(--line)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--text)]"
+      className="az-icon-btn relative"
       aria-label="Notifications"
       title="Notifications"
+      suppressHydrationWarning
     >
       <Bell className="h-4 w-4" />
       {count > 0 ? (

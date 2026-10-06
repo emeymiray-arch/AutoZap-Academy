@@ -519,6 +519,22 @@ html[data-theme="light"] .az-glass-glow::after {
   transform: scale(0.98);
 }
 
+.az-icon-btn {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+}
+
+.az-icon-btn:hover {
+  color: var(--text);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .aurora-scene {
     animation: none;

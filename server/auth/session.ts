@@ -2,8 +2,15 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { Role, User } from "@prisma/client";
 import { prisma } from "@server/db";
+import {
+  createSessionToken,
+  LEGACY_SESSION_COOKIE,
+  SESSION_COOKIE,
+  sessionCookieOptions,
+  verifySessionToken,
+} from "@server/auth/session-token";
 
-export const SESSION_COOKIE = "az_session_user";
+export { SESSION_COOKIE, LEGACY_SESSION_COOKIE };
 
 export type SessionUser = Pick<
   User,
@@ -16,6 +23,7 @@ export type SessionUser = Pick<
   | "about"
   | "consentAcceptedAt"
   | "mustChangePassword"
+  | "sessionVersion"
 >;
 
 const sessionSelect = {
@@ -28,20 +36,50 @@ const sessionSelect = {
   about: true,
   consentAcceptedAt: true,
   mustChangePassword: true,
+  sessionVersion: true,
 } as const;
 
-export async function getSessionUserId(): Promise<string | null> {
+export async function createUserSession(user: { id: string; sessionVersion: number }) {
+  const token = await createSessionToken(user.id, user.sessionVersion);
   const jar = await cookies();
-  return jar.get(SESSION_COOKIE)?.value ?? null;
+  jar.set(SESSION_COOKIE, token, sessionCookieOptions());
+  jar.delete(LEGACY_SESSION_COOKIE);
+}
+
+export async function destroyUserSession() {
+  const jar = await cookies();
+  jar.delete(SESSION_COOKIE);
+  jar.delete(LEGACY_SESSION_COOKIE);
+}
+
+export async function bumpSessionVersion(userId: string) {
+  await prisma.user.update({
+    where: { id: userId },
+    data: { sessionVersion: { increment: 1 } },
+  });
+}
+
+export async function getSessionUserId(): Promise<string | null> {
+  const user = await getCurrentUser();
+  return user?.id ?? null;
 }
 
 export async function getCurrentUser(): Promise<SessionUser | null> {
-  const userId = await getSessionUserId();
-  if (!userId) return null;
-  return prisma.user.findUnique({
-    where: { id: userId },
+  const jar = await cookies();
+  const raw = jar.get(SESSION_COOKIE)?.value;
+  if (!raw) return null;
+
+  const payload = await verifySessionToken(raw);
+  if (!payload) return null;
+
+  const user = await prisma.user.findUnique({
+    where: { id: payload.sub },
     select: sessionSelect,
   });
+  if (!user) return null;
+  if (user.sessionVersion !== payload.v) return null;
+  if (user.about?.startsWith("[ARCHIVED]")) return null;
+  return user;
 }
 
 export async function requireUser(): Promise<SessionUser> {

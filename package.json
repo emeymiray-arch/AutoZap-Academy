@@ -12,6 +12,8 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "test:az": "tsx --test server/az/az-service.test.ts",
+    "test:auth": "tsx --test server/auth/session-token.test.ts",
+    "test": "tsx --test server/auth/session-token.test.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

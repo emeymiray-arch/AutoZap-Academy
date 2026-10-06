@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import {
+  LEGACY_SESSION_COOKIE,
+  SESSION_COOKIE,
+  verifySessionToken,
+} from "@server/auth/session-token";
 
-const SESSION_COOKIE = "az_session_user";
-
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const session = request.cookies.get(SESSION_COOKIE)?.value;
+  const token = request.cookies.get(SESSION_COOKIE)?.value;
+  const legacy = request.cookies.get(LEGACY_SESSION_COOKIE)?.value;
 
   const isPublic =
     pathname === "/login" ||
@@ -15,19 +19,28 @@ export function middleware(request: NextRequest) {
     pathname.startsWith("/bg") ||
     pathname === "/favicon.ico";
 
-  if (!session && !isPublic) {
+  const payload = token ? await verifySessionToken(token) : null;
+  const authed = Boolean(payload);
+
+  const withCleanup = (res: NextResponse) => {
+    if (legacy) res.cookies.delete(LEGACY_SESSION_COOKIE);
+    if (token && !payload) res.cookies.delete(SESSION_COOKIE);
+    return res;
+  };
+
+  if (!authed && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    return NextResponse.redirect(url);
+    return withCleanup(NextResponse.redirect(url));
   }
 
-  if (session && pathname === "/login") {
+  if (authed && pathname === "/login") {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
+    return withCleanup(NextResponse.redirect(url));
   }
 
-  return NextResponse.next();
+  return withCleanup(NextResponse.next());
 }
 
 export const config = {

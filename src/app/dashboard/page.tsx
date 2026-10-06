@@ -3,7 +3,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { AzSpeedStats } from "@/components/az/az-speed-stats";
 import { NewsComposeForm } from "@/components/news/news-compose-form";
 import { deleteNewsAction } from "@/app/actions/social";
-import { getStudentAzDashboard } from "@/app/actions/az";
+import { loadStudentAzDashboard } from "@server/az/queries";
 import { requireUser } from "@server/auth/session";
 import { prisma } from "@server/db";
 import { createAZService } from "@server/az/az-service";
@@ -70,7 +70,7 @@ export default async function DashboardPage() {
       },
     }),
     isAdmin ? Promise.resolve(null) : getNextLesson(user.id),
-    isAdmin ? Promise.resolve(null) : getStudentAzDashboard(user.id),
+    isAdmin ? Promise.resolve(null) : loadStudentAzDashboard(user.id),
     prisma.newsPost.findMany({
       orderBy: { createdAt: "desc" },
       take: 5,

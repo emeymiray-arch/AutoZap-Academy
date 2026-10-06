@@ -7,6 +7,7 @@ import {
 } from "@/app/actions/notifications";
 import { requireUser } from "@server/auth/session";
 import { prisma } from "@server/db";
+import { sanitizeInternalHref } from "@/lib/sanitize";
 
 export const dynamic = "force-dynamic";
 
@@ -51,12 +52,14 @@ export default async function NotificationsPage() {
       </div>
 
       <ul className="mb-6 divide-y divide-white/10">
-        {items.map((n) => (
+        {items.map((n) => {
+          const href = sanitizeInternalHref(n.href);
+          return (
           <li key={n.id} className={`py-3 ${n.readAt ? "opacity-60" : ""}`}>
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                {n.href ? (
-                  <Link href={n.href} className="text-sm font-semibold text-white hover:text-[var(--cyan)]">
+                {href ? (
+                  <Link href={href} className="text-sm font-semibold text-white hover:text-[var(--cyan)]">
                     {n.title}
                   </Link>
                 ) : (
@@ -77,7 +80,8 @@ export default async function NotificationsPage() {
               ) : null}
             </div>
           </li>
-        ))}
+          );
+        })}
         {items.length === 0 ? (
           <li className="py-4 text-sm text-[var(--muted)]">No notifications yet</li>
         ) : null}

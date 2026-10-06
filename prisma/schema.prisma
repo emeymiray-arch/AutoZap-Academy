@@ -29,6 +29,8 @@ model User {
   about              String?
   consentAcceptedAt  DateTime?
   mustChangePassword Boolean   @default(false)
+  /// Bumped to invalidate all existing session cookies
+  sessionVersion     Int       @default(0)
   notifyChat         Boolean   @default(true)
   notifyNews         Boolean   @default(true)
   notifyActivity     Boolean   @default(true)

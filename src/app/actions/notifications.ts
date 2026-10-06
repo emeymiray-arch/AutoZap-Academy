@@ -51,21 +51,3 @@ export async function getUnreadNotificationCount() {
     where: { userId: user.id, readAt: null },
   });
 }
-
-/** Fan-out helper used by other actions */
-export async function notifyUsers(input: {
-  userIds: string[];
-  title: string;
-  body: string;
-  href?: string;
-}) {
-  if (input.userIds.length === 0) return;
-  await prisma.notification.createMany({
-    data: input.userIds.map((userId) => ({
-      userId,
-      title: input.title,
-      body: input.body,
-      href: input.href ?? null,
-    })),
-  });
-}

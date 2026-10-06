@@ -236,7 +236,7 @@ export async function sendChatMessageAction(
   });
   const targets = others.filter((o) => o.user.notifyChat).map((o) => o.user.id);
   if (targets.length > 0) {
-    const { notifyUsers } = await import("@/app/actions/notifications");
+    const { notifyUsers } = await import("@server/notifications/notify");
     const preview = body.length > 80 ? `${body.slice(0, 80)}…` : body;
     await notifyUsers({
       userIds: targets,
@@ -386,7 +386,7 @@ export async function createNewsAction(
     select: { id: true },
   });
   if (recipients.length > 0) {
-    const { notifyUsers } = await import("@/app/actions/notifications");
+    const { notifyUsers } = await import("@server/notifications/notify");
     await notifyUsers({
       userIds: recipients.map((r) => r.id),
       title: "Новость Academy",

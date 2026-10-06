@@ -1,7 +1,7 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { AzSpeedStats } from "@/components/az/az-speed-stats";
 import { ProfileEditForm } from "@/components/profile/profile-edit-form";
-import { getStudentAzDashboard } from "@/app/actions/az";
+import { loadStudentAzDashboard } from "@server/az/queries";
 import { requireUser } from "@server/auth/session";
 import { displayName, initials } from "@/lib/user";
 
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export default async function ProfilePage() {
   const user = await requireUser();
   const isAdmin = user.role === "ADMIN";
-  const summary = isAdmin ? null : (await getStudentAzDashboard(user.id)).summary;
+  const summary = isAdmin ? null : (await loadStudentAzDashboard(user.id)).summary;
 
   return (
     <AppShell user={user} title="Мой профиль">
