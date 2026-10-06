@@ -66,7 +66,11 @@ export default async function ActivityPage() {
 
   return (
     <AppShell user={user} title="Активность">
-      <ActivityBoard posts={payload} isAdmin={user.role === "ADMIN"} />
+      <ActivityBoard
+        posts={payload}
+        isAdmin={user.role === "ADMIN"}
+        currentUserId={user.id}
+      />
     </AppShell>
   );
 }

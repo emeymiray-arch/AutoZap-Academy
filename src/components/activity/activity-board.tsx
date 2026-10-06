@@ -1,11 +1,15 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import {
   awardActivityAction,
   createActivityPostAction,
   createActivityReplyAction,
+  deleteActivityPostAction,
+  deleteActivityReplyAction,
   toggleActivityVoteAction,
+  updateActivityPostAction,
+  updateActivityReplyAction,
   type ActionState,
 } from "@/app/actions/social";
 import { displayName, initials } from "@/lib/user";
@@ -71,7 +75,6 @@ function Avatar({ user, size = 28 }: { user: Author; size?: number }) {
   );
 }
 
-/** Admin AZ award as a tire (шина) */
 function TireAward({ postId, replyId }: { postId?: string; replyId?: string }) {
   const [state, action, pending] = useActionState(awardActivityAction, empty);
   const [amount, setAmount] = useState(10);
@@ -175,12 +178,88 @@ function VoteRow({
   );
 }
 
+function EditableBody({
+  body,
+  canEdit,
+  onUpdate,
+  onDelete,
+  deleteField,
+  deleteId,
+  textClassName,
+}: {
+  body: string;
+  canEdit: boolean;
+  onUpdate: (prev: ActionState, formData: FormData) => Promise<ActionState>;
+  onDelete: (formData: FormData) => Promise<void> | void;
+  deleteField: "postId" | "replyId";
+  deleteId: string;
+  textClassName: string;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [state, action, pending] = useActionState(onUpdate, empty);
+
+  useEffect(() => {
+    if (state.ok) setEditing(false);
+  }, [state]);
+
+  if (!canEdit) {
+    return <p className={textClassName}>{body}</p>;
+  }
+
+  if (editing) {
+    return (
+      <form action={action} className="mt-0.5 space-y-1.5">
+        <input type="hidden" name={deleteField} value={deleteId} />
+        <textarea
+          name="body"
+          required
+          defaultValue={body}
+          rows={3}
+          className="az-input az-input-rect w-full text-sm"
+        />
+        {state.error ? <p className="text-[0.65rem] text-rose-300">{state.error}</p> : null}
+        <div className="flex gap-2">
+          <button type="submit" disabled={pending} className="az-btn az-btn-accent px-2.5 py-1 text-xs">
+            {pending ? "…" : "Сохранить"}
+          </button>
+          <button
+            type="button"
+            className="az-btn az-btn-ghost px-2.5 py-1 text-xs"
+            onClick={() => setEditing(false)}
+          >
+            Отмена
+          </button>
+        </div>
+      </form>
+    );
+  }
+
+  return (
+    <div>
+      <p className={textClassName}>{body}</p>
+      <div className="mt-1 flex gap-2 text-[0.65rem] text-[var(--muted)]">
+        <button type="button" className="hover:text-[var(--cyan)]" onClick={() => setEditing(true)}>
+          изменить
+        </button>
+        <form action={onDelete}>
+          <input type="hidden" name={deleteField} value={deleteId} />
+          <button type="submit" className="hover:text-rose-300">
+            удалить
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export function ActivityBoard({
   posts,
   isAdmin,
+  currentUserId,
 }: {
   posts: Post[];
   isAdmin: boolean;
+  currentUserId: string;
 }) {
   const [postState, postAction, postPending] = useActionState(createActivityPostAction, empty);
 
@@ -201,78 +280,100 @@ export function ActivityBoard({
         ) : null}
       </form>
 
-      {posts.map((post) => (
-        <article key={post.id} className="border-b border-white/10 py-2.5">
-          <div className="flex items-start gap-2">
-            <Link href={`/participants/${post.author.id}`} className="shrink-0 pt-0.5">
-              <Avatar user={post.author} size={28} />
-            </Link>
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0">
-                <Link
-                  href={`/participants/${post.author.id}`}
-                  className="text-xs font-semibold text-white hover:text-[var(--cyan)]"
-                >
-                  {displayName(post.author)}
-                </Link>
-                <span className="text-[0.6rem] text-[var(--muted)]">
-                  {new Date(post.createdAt).toLocaleString("ru-RU", {
-                    day: "2-digit",
-                    month: "short",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
+      {posts.map((post) => {
+        const canEditPost = post.author.id === currentUserId || isAdmin;
+        return (
+          <article key={post.id} className="border-b border-white/10 py-2.5">
+            <div className="flex items-start gap-2">
+              <Link href={`/participants/${post.author.id}`} className="shrink-0 pt-0.5">
+                <Avatar user={post.author} size={28} />
+              </Link>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0">
+                  <Link
+                    href={`/participants/${post.author.id}`}
+                    className="text-xs font-semibold text-white hover:text-[var(--cyan)]"
+                  >
+                    {displayName(post.author)}
+                  </Link>
+                  <span className="text-[0.6rem] text-[var(--muted)]">
+                    {new Date(post.createdAt).toLocaleString("ru-RU", {
+                      day: "2-digit",
+                      month: "short",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+
+                <EditableBody
+                  body={post.body}
+                  canEdit={canEditPost}
+                  onUpdate={updateActivityPostAction}
+                  onDelete={deleteActivityPostAction}
+                  deleteField="postId"
+                  deleteId={post.id}
+                  textClassName="mt-0.5 whitespace-pre-wrap text-sm leading-snug text-white/90"
+                />
+
+                <VoteRow
+                  postId={post.id}
+                  likes={post.likes}
+                  dislikes={post.dislikes}
+                  myVote={post.myVote}
+                  awardedAz={post.awardedAz}
+                  isAdmin={isAdmin}
+                />
+
+                {post.replies.length > 0 ? (
+                  <ul className="mt-1.5 space-y-1.5 border-l border-white/10 pl-2.5">
+                    {post.replies.map((reply) => {
+                      const canEditReply = reply.author.id === currentUserId || isAdmin;
+                      return (
+                        <li key={reply.id} className="flex items-start gap-1.5">
+                          <Link
+                            href={`/participants/${reply.author.id}`}
+                            className="shrink-0 pt-0.5"
+                          >
+                            <Avatar user={reply.author} size={22} />
+                          </Link>
+                          <div className="min-w-0 flex-1">
+                            <Link
+                              href={`/participants/${reply.author.id}`}
+                              className="text-[0.7rem] font-semibold text-white/90"
+                            >
+                              {displayName(reply.author)}
+                            </Link>
+                            <EditableBody
+                              body={reply.body}
+                              canEdit={canEditReply}
+                              onUpdate={updateActivityReplyAction}
+                              onDelete={deleteActivityReplyAction}
+                              deleteField="replyId"
+                              deleteId={reply.id}
+                              textClassName="whitespace-pre-wrap text-[0.8rem] leading-snug text-white/85"
+                            />
+                            <VoteRow
+                              replyId={reply.id}
+                              likes={reply.likes}
+                              dislikes={reply.dislikes}
+                              myVote={reply.myVote}
+                              awardedAz={reply.awardedAz}
+                              isAdmin={isAdmin}
+                            />
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : null}
+
+                <ReplyForm postId={post.id} />
               </div>
-              <p className="mt-0.5 whitespace-pre-wrap text-sm leading-snug text-white/90">
-                {post.body}
-              </p>
-
-              <VoteRow
-                postId={post.id}
-                likes={post.likes}
-                dislikes={post.dislikes}
-                myVote={post.myVote}
-                awardedAz={post.awardedAz}
-                isAdmin={isAdmin}
-              />
-
-              {post.replies.length > 0 ? (
-                <ul className="mt-1.5 space-y-1.5 border-l border-white/10 pl-2.5">
-                  {post.replies.map((reply) => (
-                    <li key={reply.id} className="flex items-start gap-1.5">
-                      <Link href={`/participants/${reply.author.id}`} className="shrink-0 pt-0.5">
-                        <Avatar user={reply.author} size={22} />
-                      </Link>
-                      <div className="min-w-0 flex-1">
-                        <Link
-                          href={`/participants/${reply.author.id}`}
-                          className="text-[0.7rem] font-semibold text-white/90"
-                        >
-                          {displayName(reply.author)}
-                        </Link>
-                        <p className="whitespace-pre-wrap text-[0.8rem] leading-snug text-white/85">
-                          {reply.body}
-                        </p>
-                        <VoteRow
-                          replyId={reply.id}
-                          likes={reply.likes}
-                          dislikes={reply.dislikes}
-                          myVote={reply.myVote}
-                          awardedAz={reply.awardedAz}
-                          isAdmin={isAdmin}
-                        />
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-
-              <ReplyForm postId={post.id} />
             </div>
-          </div>
-        </article>
-      ))}
+          </article>
+        );
+      })}
 
       {posts.length === 0 ? (
         <p className="px-1 text-sm text-[var(--muted)]">Пока нет вопросов — будьте первым.</p>

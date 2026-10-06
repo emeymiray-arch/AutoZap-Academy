@@ -1,5 +1,6 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { ChatComposer } from "@/components/chat/chat-composer";
+import { ChatMessageBubble } from "@/components/chat/chat-message";
 import { requireUser } from "@server/auth/session";
 import { prisma } from "@server/db";
 import { displayName, initials } from "@/lib/user";
@@ -46,40 +47,26 @@ export default async function ChatThreadPage({
   if (!other) notFound();
 
   return (
-    <AppShell
-      user={me}
-      title={displayName(other)}
-    >
+    <AppShell user={me} title={displayName(other)}>
       <Link href="/chats" className="mb-3 inline-block text-xs text-[var(--cyan)]">
         ← Все чаты
       </Link>
 
       <div className="flex max-h-[60vh] flex-col border-t border-white/10 pt-3">
         <div className="flex-1 space-y-2 overflow-y-auto">
-          {thread.messages.map((m) => {
-            const mine = m.senderId === me.id;
-            return (
-              <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                <div
-                  className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
-                    mine
-                      ? "bg-[rgba(3,96,253,0.35)] text-white"
-                      : "border border-white/15 bg-white/5 text-white/90"
-                  }`}
-                >
-                  {!mine ? (
-                    <p className="mb-0.5 text-[0.65rem] font-semibold text-[var(--cyan)]">
-                      {displayName(m.sender)}
-                    </p>
-                  ) : null}
-                  <p className="whitespace-pre-wrap">{m.body}</p>
-                  <p className="mt-1 text-[0.6rem] opacity-60">
-                    {m.createdAt.toLocaleString("ru-RU")}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
+          {thread.messages.map((m) => (
+            <ChatMessageBubble
+              key={m.id}
+              mine={m.senderId === me.id}
+              message={{
+                id: m.id,
+                body: m.body,
+                createdAt: m.createdAt.toISOString(),
+                updatedAt: m.updatedAt.toISOString(),
+                sender: m.sender,
+              }}
+            />
+          ))}
           {thread.messages.length === 0 ? (
             <p className="py-8 text-center text-sm text-[var(--muted)]">Напишите первое сообщение</p>
           ) : null}
@@ -87,10 +74,7 @@ export default async function ChatThreadPage({
         <ChatComposer threadId={thread.id} />
       </div>
 
-      <Link
-        href={`/participants/${other.id}`}
-        className="mt-3 flex items-center gap-3 py-2"
-      >
+      <Link href={`/participants/${other.id}`} className="mt-3 flex items-center gap-3 py-2">
         {other.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={other.avatarUrl} alt="" className="h-9 w-9 rounded-full object-cover" />

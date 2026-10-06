@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import type { Role } from "@prisma/client";
 import { BrandMark } from "@/components/brand/logo";
 import { NotificationsBell } from "@/components/layout/notifications-bell";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { logoutAction } from "@/app/actions/auth";
 import { displayName, initials } from "@/lib/user";
 
@@ -75,7 +76,7 @@ export function AppShell({
               <BrandMark size={expanded ? 36 : 32} />
               {expanded ? (
                 <p
-                  className="truncate text-sm font-extrabold tracking-tight text-white"
+                  className="truncate text-sm font-extrabold tracking-tight text-[var(--text)]"
                   style={{ fontFamily: "var(--font-display), sans-serif" }}
                 >
                   AutoZap Academy
@@ -85,7 +86,7 @@ export function AppShell({
             <button
               type="button"
               onClick={() => setExpanded((v) => !v)}
-              className="grid h-8 w-8 place-items-center rounded-xl border border-white/15 bg-white/5 text-[var(--muted)] hover:text-white"
+              className="grid h-8 w-8 place-items-center rounded-xl border border-[var(--line)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--text)]"
               aria-label={expanded ? "Свернуть" : "Развернуть"}
             >
               {expanded ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
@@ -105,8 +106,8 @@ export function AppShell({
                     "flex items-center rounded-xl text-sm font-medium transition",
                     expanded ? "gap-2.5 px-3 py-2" : "h-10 w-10 justify-center",
                     active
-                      ? "border border-[rgba(3,205,253,0.35)] bg-[rgba(3,205,253,0.16)] text-white shadow-[0_0_20px_rgba(3,205,253,0.25)]"
-                      : "text-[var(--muted)] hover:bg-white/5 hover:text-white",
+                      ? "border border-[rgba(3,205,253,0.35)] bg-[rgba(3,205,253,0.16)] text-[var(--text)] shadow-[0_0_20px_rgba(3,205,253,0.25)]"
+                      : "text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--text)]",
                   )}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
@@ -121,7 +122,7 @@ export function AppShell({
               type="submit"
               title="Выйти"
               className={cn(
-                "flex items-center rounded-xl border border-white/15 bg-white/5 text-[var(--muted)] hover:text-white",
+                "flex items-center rounded-xl border border-[var(--line)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--text)]",
                 expanded ? "w-full gap-2 px-3 py-2 text-sm" : "h-10 w-10 justify-center",
               )}
             >
@@ -136,17 +137,18 @@ export function AppShell({
             <Link href="/dashboard" className="flex min-w-0 items-center gap-2">
               <BrandMark size={28} />
               <span
-                className="min-w-0 truncate text-sm font-extrabold tracking-tight text-white sm:text-base"
+                className="min-w-0 truncate text-sm font-extrabold tracking-tight text-[var(--text)] sm:text-base"
                 style={{ fontFamily: "var(--font-display), sans-serif" }}
               >
                 AutoZap Academy
               </span>
             </Link>
             <div className="flex shrink-0 items-center gap-2">
+              <ThemeToggle />
               <NotificationsBell />
               <Link
                 href="/profile"
-                className="flex max-w-[50vw] items-center gap-2 rounded-full border border-white/15 bg-white/5 py-1 pl-1 pr-2"
+                className="flex max-w-[50vw] items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] py-1 pl-1 pr-2"
               >
                 {user.avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -160,7 +162,7 @@ export function AppShell({
                     {initials(displayName(user))}
                   </span>
                 )}
-                <span className="hidden truncate text-sm font-semibold text-white sm:block">
+                <span className="hidden truncate text-sm font-semibold text-[var(--text)] sm:block">
                   {displayName(user)}
                 </span>
               </Link>
@@ -179,7 +181,9 @@ export function AppShell({
                   title={item.label}
                   className={cn(
                     "flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-lg px-0.5 py-1 text-[0.55rem]",
-                    active ? "bg-[rgba(3,205,253,0.16)] text-white" : "text-[var(--muted)]",
+                    active
+                      ? "bg-[rgba(3,205,253,0.16)] text-[var(--text)]"
+                      : "text-[var(--muted)]",
                   )}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
@@ -192,7 +196,7 @@ export function AppShell({
           <main className="min-w-0 w-full flex-1 overflow-x-clip px-0.5 py-1 sm:px-2 sm:py-3">
             <div className="az-rise mb-3 min-w-0 sm:mb-4">
               <h1
-                className="break-words text-xl font-extrabold tracking-tight text-white sm:text-2xl"
+                className="break-words text-xl font-extrabold tracking-tight text-[var(--text)] sm:text-2xl"
                 style={{ fontFamily: "var(--font-display), sans-serif" }}
               >
                 {title}

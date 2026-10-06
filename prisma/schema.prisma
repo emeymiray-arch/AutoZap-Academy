@@ -494,6 +494,7 @@ model ChatMessage {
   senderId  String
   body      String
   createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   thread ChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
   sender User       @relation("ChatSender", fields: [senderId], references: [id], onDelete: Cascade)

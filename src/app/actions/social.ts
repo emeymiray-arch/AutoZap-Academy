@@ -252,6 +252,115 @@ export async function sendChatMessageAction(
   return { ok: true };
 }
 
+export async function updateChatMessageAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const me = await requireUser();
+  const messageId = String(formData.get("messageId") ?? "");
+  const body = String(formData.get("body") ?? "").trim();
+  if (!messageId) return { error: "Сообщение не найдено" };
+  if (body.length < 1) return { error: "Пустое сообщение" };
+  if (body.length > 4000) return { error: "Слишком длинное сообщение" };
+
+  const msg = await prisma.chatMessage.findUnique({ where: { id: messageId } });
+  if (!msg || msg.senderId !== me.id) return { error: "Нельзя изменить чужое сообщение" };
+
+  await prisma.chatMessage.update({
+    where: { id: messageId },
+    data: { body },
+  });
+
+  revalidatePath(`/chats/${msg.threadId}`);
+  revalidatePath("/chats");
+  return { ok: true };
+}
+
+export async function deleteChatMessageAction(formData: FormData) {
+  const me = await requireUser();
+  const messageId = String(formData.get("messageId") ?? "");
+  if (!messageId) return;
+
+  const msg = await prisma.chatMessage.findUnique({ where: { id: messageId } });
+  if (!msg || msg.senderId !== me.id) return;
+
+  await prisma.chatMessage.delete({ where: { id: messageId } });
+  revalidatePath(`/chats/${msg.threadId}`);
+  revalidatePath("/chats");
+}
+
+export async function updateActivityPostAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser();
+  const postId = String(formData.get("postId") ?? "");
+  const body = String(formData.get("body") ?? "").trim();
+  if (!postId) return { error: "Вопрос не найден" };
+  if (body.length < 3) return { error: "Слишком короткий вопрос" };
+  if (body.length > 2000) return { error: "Слишком длинный текст" };
+
+  const post = await prisma.activityPost.findUnique({ where: { id: postId } });
+  if (!post) return { error: "Вопрос не найден" };
+  if (post.authorId !== user.id && user.role !== "ADMIN") {
+    return { error: "Нельзя изменить чужой вопрос" };
+  }
+
+  await prisma.activityPost.update({ where: { id: postId }, data: { body } });
+  revalidatePath("/activity");
+  revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+export async function deleteActivityPostAction(formData: FormData) {
+  const user = await requireUser();
+  const postId = String(formData.get("postId") ?? "");
+  if (!postId) return;
+
+  const post = await prisma.activityPost.findUnique({ where: { id: postId } });
+  if (!post) return;
+  if (post.authorId !== user.id && user.role !== "ADMIN") return;
+
+  await prisma.activityPost.delete({ where: { id: postId } });
+  revalidatePath("/activity");
+  revalidatePath("/dashboard");
+}
+
+export async function updateActivityReplyAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const user = await requireUser();
+  const replyId = String(formData.get("replyId") ?? "");
+  const body = String(formData.get("body") ?? "").trim();
+  if (!replyId) return { error: "Ответ не найден" };
+  if (body.length < 2) return { error: "Введите ответ" };
+  if (body.length > 2000) return { error: "Слишком длинный текст" };
+
+  const reply = await prisma.activityReply.findUnique({ where: { id: replyId } });
+  if (!reply) return { error: "Ответ не найден" };
+  if (reply.authorId !== user.id && user.role !== "ADMIN") {
+    return { error: "Нельзя изменить чужой ответ" };
+  }
+
+  await prisma.activityReply.update({ where: { id: replyId }, data: { body } });
+  revalidatePath("/activity");
+  return { ok: true };
+}
+
+export async function deleteActivityReplyAction(formData: FormData) {
+  const user = await requireUser();
+  const replyId = String(formData.get("replyId") ?? "");
+  if (!replyId) return;
+
+  const reply = await prisma.activityReply.findUnique({ where: { id: replyId } });
+  if (!reply) return;
+  if (reply.authorId !== user.id && user.role !== "ADMIN") return;
+
+  await prisma.activityReply.delete({ where: { id: replyId } });
+  revalidatePath("/activity");
+}
+
 export async function createNewsAction(
   _prev: ActionState,
   formData: FormData,

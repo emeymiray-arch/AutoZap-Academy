@@ -1,6 +1,8 @@
 @import "tailwindcss";
 
-:root {
+:root,
+html[data-theme="dark"] {
+  color-scheme: dark;
   --cyan: #03cdfd;
   --blue: #0360fd;
   --ink: #f4f8ff;
@@ -12,16 +14,61 @@
   --accent-deep: #4db8ff;
   --ok: #34d399;
   --bad: #fb7185;
-  --glass: rgba(120, 180, 255, 0.05);
-  --glass-strong: rgba(100, 160, 255, 0.07);
-  --glass-border: rgba(255, 255, 255, 0.32);
+  --line: rgba(255, 255, 255, 0.15);
+  --line-strong: rgba(255, 255, 255, 0.22);
+  --surface: rgba(255, 255, 255, 0.05);
+  --surface-strong: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(8, 24, 56, 0.28);
+  --glass-bg-strong: rgba(6, 20, 48, 0.34);
+  --glass-border: rgba(255, 255, 255, 0.22);
+  --glass-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
   --glow-cyan: rgba(3, 205, 253, 0.55);
   --glow-blue: rgba(3, 96, 253, 0.45);
   --brand-grad: linear-gradient(135deg, #4ee0ff 0%, #03cdfd 40%, #0360fd 100%);
+  --aurora-bg: #000000;
+  --aurora-veil-a: rgba(0, 0, 0, 0.4);
+  --aurora-filter: saturate(1.05) contrast(1.06) brightness(1);
   --sidebar-w: 248px;
   --radius-lg: 26px;
   --radius-md: 18px;
   --radius-sm: 14px;
+  --input-bg: rgba(255, 255, 255, 0.06);
+  --input-border: rgba(255, 255, 255, 0.28);
+  --btn-bg: rgba(255, 255, 255, 0.1);
+  --table-line: rgba(255, 255, 255, 0.1);
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+  --cyan: #0284c7;
+  --blue: #0360fd;
+  --ink: #0b1220;
+  --ink-soft: #334155;
+  --paper: #e8eef8;
+  --muted: #64748b;
+  --text: #0f172a;
+  --accent: #0284c7;
+  --accent-deep: #0369a1;
+  --ok: #059669;
+  --bad: #e11d48;
+  --line: rgba(15, 23, 42, 0.12);
+  --line-strong: rgba(15, 23, 42, 0.18);
+  --surface: rgba(255, 255, 255, 0.55);
+  --surface-strong: rgba(255, 255, 255, 0.72);
+  --glass-bg: rgba(255, 255, 255, 0.62);
+  --glass-bg-strong: rgba(255, 255, 255, 0.78);
+  --glass-border: rgba(15, 23, 42, 0.12);
+  --glass-shadow: 0 16px 40px rgba(15, 40, 80, 0.12);
+  --glow-cyan: rgba(3, 205, 253, 0.25);
+  --glow-blue: rgba(3, 96, 253, 0.18);
+  --brand-grad: linear-gradient(135deg, #38bdf8 0%, #0284c7 40%, #0360fd 100%);
+  --aurora-bg: #c7d7ef;
+  --aurora-veil-a: rgba(232, 238, 248, 0.55);
+  --aurora-filter: saturate(0.85) contrast(0.95) brightness(1.35);
+  --input-bg: rgba(255, 255, 255, 0.85);
+  --input-border: rgba(15, 23, 42, 0.16);
+  --btn-bg: rgba(15, 23, 42, 0.06);
+  --table-line: rgba(15, 23, 42, 0.1);
 }
 
 @theme inline {
@@ -44,13 +91,12 @@ body {
 }
 
 html {
-  background: #05060c;
+  background: var(--paper);
 }
 
 body {
   margin: 0;
   color: var(--text);
-  /* Transparent so fixed aurora is the only scene glass samples */
   background: transparent;
   font-family: var(--font-body), sans-serif;
   overflow-x: clip;
@@ -58,7 +104,36 @@ body {
   text-size-adjust: 100%;
 }
 
-/* App root — never wider than the device */
+html[data-theme="light"] .text-white {
+  color: var(--text);
+}
+html[data-theme="light"] .text-white\/90,
+html[data-theme="light"] .text-white\/85,
+html[data-theme="light"] .text-white\/80 {
+  color: color-mix(in srgb, var(--text) 88%, transparent);
+}
+html[data-theme="light"] .border-white\/10 {
+  border-color: var(--line);
+}
+html[data-theme="light"] .border-white\/15 {
+  border-color: var(--line-strong);
+}
+html[data-theme="light"] .divide-white\/10 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--line);
+}
+html[data-theme="light"] .bg-white\/5 {
+  background-color: var(--surface);
+}
+html[data-theme="light"] .hover\:bg-white\/5:hover {
+  background-color: var(--surface-strong);
+}
+html[data-theme="light"] .hover\:bg-white\/10:hover {
+  background-color: var(--surface-strong);
+}
+html[data-theme="light"] .hover\:text-white:hover {
+  color: var(--text);
+}
+
 .az-app {
   position: relative;
   z-index: 1;
@@ -77,15 +152,13 @@ a {
   background: rgba(3, 205, 253, 0.35);
 }
 
-/* ── 3D scene behind glass (same as 2MindOS) ─────────── */
-
 .aurora {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
-  background: #000000;
+  background: var(--aurora-bg);
 }
 
 .aurora-scene {
@@ -97,16 +170,24 @@ a {
   object-position: 50% 48%;
   transform-origin: 50% 50%;
   animation: sceneDrift 36s ease-in-out infinite alternate;
-  filter: saturate(1.05) contrast(1.06) brightness(1);
+  filter: var(--aurora-filter);
+  transition: filter 0.35s ease;
 }
 
 .aurora-veil {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 85% 70% at 50% 45%, transparent 35%, rgba(0, 0, 0, 0.4) 100%),
+    radial-gradient(ellipse 85% 70% at 50% 45%, transparent 35%, var(--aurora-veil-a) 100%),
     radial-gradient(ellipse 50% 40% at 20% 20%, rgba(3, 205, 253, 0.12), transparent 60%),
     radial-gradient(ellipse 45% 35% at 80% 70%, rgba(3, 96, 253, 0.14), transparent 55%);
+}
+
+html[data-theme="light"] .aurora-veil {
+  background:
+    radial-gradient(ellipse 85% 70% at 50% 45%, transparent 20%, var(--aurora-veil-a) 100%),
+    radial-gradient(ellipse 50% 40% at 20% 20%, rgba(3, 205, 253, 0.08), transparent 60%),
+    radial-gradient(ellipse 45% 35% at 80% 70%, rgba(3, 96, 253, 0.08), transparent 55%);
 }
 
 @keyframes sceneDrift {
@@ -156,37 +237,35 @@ a {
   animation: rise-in 0.6s ease-out 0.08s both;
 }
 
-/* ── Clean glass: light blur, no texture, with glow ──── */
-
 .az-glass,
 .az-glass-strong {
   position: relative;
   overflow: hidden;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(8, 24, 56, 0.28);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
   backdrop-filter: blur(10px) saturate(1.35);
   -webkit-backdrop-filter: blur(10px) saturate(1.35);
   box-shadow:
-    0 16px 40px rgba(0, 0, 0, 0.35),
+    var(--glass-shadow),
     inset 0 1px 0 rgba(255, 255, 255, 0.35),
     inset 1px 0 0 rgba(255, 255, 255, 0.12),
     0 0 32px rgba(3, 96, 253, 0.12);
   transition:
     box-shadow 0.35s ease,
-    border-color 0.35s ease;
+    border-color 0.35s ease,
+    background 0.35s ease;
 }
 
 .az-glass-strong {
-  background: rgba(6, 20, 48, 0.34);
+  background: var(--glass-bg-strong);
   box-shadow:
-    0 20px 48px rgba(0, 0, 0, 0.4),
+    var(--glass-shadow),
     inset 0 1px 0 rgba(255, 255, 255, 0.4),
     inset 1px 0 0 rgba(255, 255, 255, 0.14),
     0 0 40px rgba(3, 96, 253, 0.16);
 }
 
-/* Soft top sheen only — no frost texture */
 .az-glass::before,
 .az-glass-strong::before {
   content: "";
@@ -203,7 +282,6 @@ a {
   z-index: 0;
 }
 
-/* Inner backlight */
 .az-glass::after,
 .az-glass-strong::after {
   content: "";
@@ -217,6 +295,13 @@ a {
   z-index: 1;
 }
 
+html[data-theme="light"] .az-glass::after,
+html[data-theme="light"] .az-glass-strong::after {
+  background:
+    radial-gradient(80% 55% at 50% -5%, rgba(3, 205, 253, 0.12), transparent 55%),
+    radial-gradient(55% 45% at 90% 10%, rgba(3, 96, 253, 0.08), transparent 50%);
+}
+
 .az-glass > *,
 .az-glass-strong > * {
   position: relative;
@@ -227,13 +312,12 @@ a {
 .az-glass-strong:hover {
   border-color: rgba(3, 205, 253, 0.4);
   box-shadow:
-    0 22px 50px rgba(0, 0, 0, 0.45),
+    var(--glass-shadow),
     inset 0 1px 0 rgba(255, 255, 255, 0.45),
     0 0 48px rgba(3, 205, 253, 0.28),
     0 0 80px rgba(3, 96, 253, 0.18);
 }
 
-/* Stronger title backlight */
 .az-glass-glow::after {
   background:
     radial-gradient(70% 50% at 50% 0%, rgba(3, 205, 253, 0.42), transparent 58%),
@@ -241,9 +325,15 @@ a {
   animation: glass-breathe 5s ease-in-out infinite;
 }
 
+html[data-theme="light"] .az-glass-glow::after {
+  background:
+    radial-gradient(70% 50% at 50% 0%, rgba(3, 205, 253, 0.18), transparent 58%),
+    radial-gradient(50% 40% at 85% 15%, rgba(3, 96, 253, 0.12), transparent 55%);
+}
+
 .az-glass-glow {
   box-shadow:
-    0 20px 48px rgba(0, 0, 0, 0.4),
+    var(--glass-shadow),
     inset 0 1px 0 rgba(255, 255, 255, 0.4),
     0 0 56px rgba(3, 205, 253, 0.28),
     0 0 100px rgba(3, 96, 253, 0.18);
@@ -262,8 +352,8 @@ a {
 
 .az-input {
   width: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
   color: var(--text);
   padding: 0.75rem 1rem;
   font: inherit;
@@ -272,7 +362,7 @@ a {
 }
 
 .az-input::placeholder {
-  color: rgba(158, 176, 205, 0.7);
+  color: color-mix(in srgb, var(--muted) 70%, transparent);
 }
 
 .az-input:focus {
@@ -290,39 +380,38 @@ a {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border: 0;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: var(--btn-bg);
+  color: var(--text);
   padding: 0.7rem 1.2rem;
   font: inherit;
   font-weight: 600;
   cursor: pointer;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid var(--line-strong);
   transition: filter 0.2s ease, box-shadow 0.2s ease;
 }
 
 .az-btn:hover {
-  filter: brightness(1.1);
+  filter: brightness(1.08);
 }
 
 .az-btn-accent {
   background: var(--brand-grad);
   border: 0;
-  color: white;
+  color: #fff;
   box-shadow:
     0 0 24px rgba(3, 205, 253, 0.45),
     0 0 48px rgba(3, 96, 253, 0.3);
 }
 
 .az-btn-ghost {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface);
   color: var(--text);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  border: 1px solid var(--line-strong);
 }
 
 .az-btn-ghost:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--surface-strong);
 }
 
 .az-table {
@@ -338,12 +427,12 @@ a {
   color: var(--muted);
   font-weight: 600;
   padding: 0.85rem 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--table-line);
 }
 
 .az-table td {
   padding: 0.95rem 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--table-line);
   vertical-align: middle;
 }
 
@@ -367,7 +456,7 @@ a {
 }
 
 .az-badge-muted {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface);
   color: var(--muted);
 }
 
@@ -379,13 +468,12 @@ a {
   place-items: center;
   background: rgba(3, 205, 253, 0.12);
   color: var(--cyan);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid var(--line-strong);
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.08) inset,
     0 0 22px rgba(3, 205, 253, 0.45);
 }
 
-/* Tire (шина) — admin AZ award */
 .az-tire {
   background:
     radial-gradient(circle at 50% 50%, #1a1a1a 0 28%, transparent 29%),
@@ -411,7 +499,6 @@ a {
     0 0 18px rgba(3, 205, 253, 0.45);
 }
 
-/* Compact square tiles (mobile: 2–3 across) */
 .az-tile {
   border-radius: 16px !important;
   min-width: 0;

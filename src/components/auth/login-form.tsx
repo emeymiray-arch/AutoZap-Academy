@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { loginAction, type AuthState } from "@/app/actions/auth";
 import { BrandMark } from "@/components/brand/logo";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import Link from "next/link";
 
 const initial: AuthState = {};
@@ -11,7 +12,10 @@ export default function LoginForm() {
   const [state, action, pending] = useActionState(loginAction, initial);
 
   return (
-    <div className="az-glass-strong az-glass-glow w-full max-w-md p-5 sm:p-7">
+    <div className="az-glass-strong az-glass-glow relative w-full max-w-md p-5 sm:p-7">
+      <div className="absolute right-3 top-3">
+        <ThemeToggle />
+      </div>
       <div className="mb-5 flex items-center gap-3">
         <BrandMark size={44} />
         <div>
@@ -19,7 +23,7 @@ export default function LoginForm() {
             AutoZap Academy
           </p>
           <h1
-            className="text-xl font-extrabold text-white sm:text-2xl"
+            className="text-xl font-extrabold text-[var(--text)] sm:text-2xl"
             style={{ fontFamily: "var(--font-display), sans-serif" }}
           >
             Вход

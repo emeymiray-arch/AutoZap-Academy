@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope, Unbounded } from "next/font/google";
 import { AuroraScene } from "@/components/layout/aurora-scene";
+import { themeBootScript } from "@/components/layout/theme-toggle";
 import "./globals.css";
 
 const display = Unbounded({
@@ -33,7 +34,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru" className={`${display.variable} ${body.variable}`}>
+    <html lang="ru" className={`${display.variable} ${body.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+      </head>
       <body className="antialiased">
         <AuroraScene />
         <div className="az-app">{children}</div>

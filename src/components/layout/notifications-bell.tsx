@@ -23,7 +23,7 @@ export function NotificationsBell() {
   return (
     <Link
       href="/notifications"
-      className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/15 bg-white/5 text-[var(--muted)] hover:text-white"
+      className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[var(--line)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--text)]"
       aria-label="Notifications"
       title="Notifications"
     >
