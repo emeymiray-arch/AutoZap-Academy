@@ -3,11 +3,10 @@ import type { StudentAzSummary } from "@server/az/az-service";
 
 export function AzProgressCard({ summary }: { summary: StudentAzSummary }) {
   return (
-    <section className="relative overflow-hidden border-y border-[var(--line-strong)] bg-white/70 py-8">
-      <div className="pointer-events-none absolute -right-8 top-0 h-full w-1/3 bg-[linear-gradient(120deg,transparent,rgba(3,205,253,0.16))]" />
+    <section className="relative overflow-hidden py-2">
       <div className="relative grid gap-8 md:grid-cols-[1.4fr_0.8fr]">
         <div>
-          <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em] text-[var(--muted)]">
+          <p className="text-[0.7rem] font-bold uppercase tracking-[0.18em] text-[var(--muted)]">
             Баланс AZ
           </p>
           <p
@@ -29,17 +28,17 @@ export function AzProgressCard({ summary }: { summary: StudentAzSummary }) {
                   : "Максимальный уровень"}
               </span>
             </div>
-            <div className="h-[4px] overflow-hidden bg-[var(--line)]">
+            <div className="h-2 overflow-hidden rounded-full bg-[rgba(3,96,253,0.1)]">
               <div
-                className="az-progress-fill h-full"
+                className="az-progress-fill h-full rounded-full"
                 style={{ width: `${summary.progressToNextLevelPercent}%` }}
               />
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col justify-end border-t border-[var(--line)] pt-6 md:border-l md:border-t-0 md:pl-8 md:pt-0">
-          <p className="text-[0.7rem] font-bold uppercase tracking-[0.22em] text-[var(--muted)]">
+        <div className="flex flex-col justify-end border-t border-[rgba(3,96,253,0.1)] pt-6 md:border-l md:border-t-0 md:pl-8 md:pt-0">
+          <p className="text-[0.7rem] font-bold uppercase tracking-[0.18em] text-[var(--muted)]">
             Уровень Академии
           </p>
           <p
@@ -49,7 +48,7 @@ export function AzProgressCard({ summary }: { summary: StudentAzSummary }) {
             {summary.level?.name ?? "—"}
           </p>
           <p className="mt-2 text-sm text-[var(--muted)]">
-            Один общий уровень по всей программе. Не привязан к модулю.
+            Один общий уровень по всей программе.
           </p>
         </div>
       </div>

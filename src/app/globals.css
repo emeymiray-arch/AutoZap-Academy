@@ -1,23 +1,25 @@
 @import "tailwindcss";
 
 :root {
-  /* Sampled from AutoZap mark: cyan #03CDFD → royal #0360FD */
   --cyan: #03cdfd;
   --blue: #0360fd;
-  --ink: #041a4a;
-  --ink-soft: #06286e;
-  --paper: #f5f9ff;
-  --paper-2: #ffffff;
-  --line: #d7e6f8;
-  --line-strong: #b7d0ee;
-  --muted: #4a678c;
-  --text: #041a4a;
+  --ink: #0b1f4a;
+  --ink-soft: #16356e;
+  --paper: #eef4ff;
+  --muted: #5a7194;
+  --text: #0b1f4a;
   --accent: #03cdfd;
   --accent-deep: #0360fd;
-  --ok: #0f7a4c;
-  --bad: #c62828;
-  --radius: 999px;
-  --brand-grad: linear-gradient(145deg, #4ee0ff 0%, #03cdfd 32%, #0090ff 64%, #0360fd 100%);
+  --ok: #12b76a;
+  --bad: #f04438;
+  --glass: rgba(255, 255, 255, 0.62);
+  --glass-strong: rgba(255, 255, 255, 0.82);
+  --glass-border: rgba(255, 255, 255, 0.7);
+  --brand-grad: linear-gradient(135deg, #4ee0ff 0%, #03cdfd 35%, #0360fd 100%);
+  --sidebar-w: 240px;
+  --radius-lg: 22px;
+  --radius-md: 16px;
+  --radius-sm: 12px;
 }
 
 @theme inline {
@@ -28,7 +30,7 @@
 }
 
 * {
-  border-color: var(--line);
+  box-sizing: border-box;
 }
 
 html,
@@ -39,11 +41,12 @@ body {
 body {
   margin: 0;
   color: var(--text);
-  background-color: var(--paper);
-  background-image:
-    radial-gradient(900px 480px at 108% -8%, rgba(3, 205, 253, 0.16), transparent 55%),
-    radial-gradient(720px 420px at -8% 12%, rgba(3, 96, 253, 0.1), transparent 52%),
-    linear-gradient(180deg, #ffffff 0%, var(--paper) 220px);
+  background:
+    radial-gradient(900px 520px at 0% 0%, rgba(3, 205, 253, 0.28), transparent 55%),
+    radial-gradient(800px 480px at 100% 10%, rgba(3, 96, 253, 0.22), transparent 50%),
+    radial-gradient(700px 500px at 70% 100%, rgba(120, 180, 255, 0.2), transparent 45%),
+    linear-gradient(160deg, #f7fbff 0%, #e8f1ff 45%, #f3f7ff 100%);
+  background-attachment: fixed;
   font-family: var(--font-body), sans-serif;
 }
 
@@ -59,7 +62,7 @@ a {
 @keyframes rise-in {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -77,11 +80,29 @@ a {
 }
 
 .az-rise {
-  animation: rise-in 0.55s ease-out both;
+  animation: rise-in 0.5s ease-out both;
 }
 
 .az-rise-delay {
-  animation: rise-in 0.65s ease-out 0.12s both;
+  animation: rise-in 0.6s ease-out 0.08s both;
+}
+
+.az-glass {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 30px rgba(11, 31, 74, 0.06);
+}
+
+.az-glass-strong {
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 36px rgba(11, 31, 74, 0.08);
 }
 
 .az-progress-fill {
@@ -90,24 +111,27 @@ a {
   background: var(--brand-grad);
 }
 
-.az-brand-bar {
-  height: 4px;
+.az-brand-grad {
   background: var(--brand-grad);
 }
 
 .az-input {
   width: 100%;
-  border: 1px solid var(--line-strong);
-  background: white;
+  border: 1px solid rgba(3, 96, 253, 0.14);
+  background: rgba(255, 255, 255, 0.85);
   color: var(--ink);
-  padding: 0.65rem 0.8rem;
+  padding: 0.75rem 1rem;
   font: inherit;
-  border-radius: 12px;
+  border-radius: 999px;
 }
 
 .az-input:focus {
-  outline: 2px solid rgba(3, 205, 253, 0.55);
+  outline: 2px solid rgba(3, 205, 253, 0.45);
   outline-offset: 1px;
+}
+
+.az-input-rect {
+  border-radius: var(--radius-sm);
 }
 
 .az-btn {
@@ -118,13 +142,12 @@ a {
   border: 0;
   background: var(--ink);
   color: white;
-  padding: 0.7rem 1.15rem;
+  padding: 0.7rem 1.2rem;
   font: inherit;
   font-weight: 600;
-  letter-spacing: 0.01em;
   cursor: pointer;
-  border-radius: var(--radius);
-  transition: filter 0.2s ease, transform 0.2s ease;
+  border-radius: 999px;
+  transition: filter 0.2s ease, transform 0.15s ease;
 }
 
 .az-btn:hover {
@@ -137,9 +160,9 @@ a {
 }
 
 .az-btn-ghost {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.55);
   color: var(--ink);
-  border: 1px solid var(--line-strong);
+  border: 1px solid rgba(3, 96, 253, 0.12);
 }
 
 .az-btn-ghost:hover {
@@ -154,20 +177,50 @@ a {
 
 .az-table th {
   font-size: 0.72rem;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted);
   font-weight: 600;
-  padding: 0.9rem 0;
-  border-bottom: 1px solid var(--line-strong);
+  padding: 0.85rem 0.75rem;
+  border-bottom: 1px solid rgba(3, 96, 253, 0.1);
 }
 
 .az-table td {
-  padding: 1rem 0;
-  border-bottom: 1px solid var(--line);
-  vertical-align: top;
+  padding: 0.95rem 0.75rem;
+  border-bottom: 1px solid rgba(3, 96, 253, 0.08);
+  vertical-align: middle;
 }
 
-.az-table tr:hover td {
-  background: rgba(3, 205, 253, 0.06);
+.az-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.az-badge-ok {
+  background: rgba(18, 183, 106, 0.12);
+  color: #027a48;
+}
+
+.az-badge-info {
+  background: rgba(3, 96, 253, 0.12);
+  color: #0360fd;
+}
+
+.az-badge-muted {
+  background: rgba(90, 113, 148, 0.12);
+  color: var(--muted);
+}
+
+.az-kpi-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: rgba(3, 96, 253, 0.1);
+  color: var(--accent-deep);
 }

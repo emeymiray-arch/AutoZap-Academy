@@ -6,20 +6,22 @@ import {
   setModuleMaxOverrideAction,
 } from "@/app/actions/az";
 import { formatAz } from "@/lib/utils";
+import { requireAdmin } from "@server/auth/session";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminAzPage() {
-  const adminId = process.env.DEMO_ADMIN_ID ?? "admin-demo-001";
+  const admin = await requireAdmin();
+  const adminId = admin.id;
   const { rules, levels, tieBreaks, students, moduleMaximums } = await getAdminAzOverview();
 
   return (
     <AppShell
-      eyebrow="CMS"
+      user={admin}
       title="Управление AZ"
       subtitle="Правила наград, уровни, максимумы модулей и финальный рейтинг. Ручное изменение баланса ученика запрещено."
     >
-      <section className="mb-14">
+      <section className="az-glass-strong mb-5 p-5">
         <h3
           className="mb-5 text-xl font-bold"
           style={{ fontFamily: "var(--font-display), sans-serif" }}
@@ -48,7 +50,7 @@ export default async function AdminAzPage() {
         </table>
       </section>
 
-      <section className="mb-14">
+      <section className="az-glass-strong mb-5 p-5">
         <h3
           className="mb-5 text-xl font-bold"
           style={{ fontFamily: "var(--font-display), sans-serif" }}
@@ -155,7 +157,7 @@ export default async function AdminAzPage() {
         </div>
       </section>
 
-      <section className="mb-14 grid gap-10 lg:grid-cols-2">
+      <section className="mb-5 grid gap-5 lg:grid-cols-2">
         <div>
           <h3
             className="mb-4 text-xl font-bold"
@@ -200,7 +202,7 @@ export default async function AdminAzPage() {
         </div>
       </section>
 
-      <section className="mb-14">
+      <section className="az-glass-strong mb-5 p-5">
         <h3
           className="mb-5 text-xl font-bold"
           style={{ fontFamily: "var(--font-display), sans-serif" }}
@@ -251,7 +253,7 @@ export default async function AdminAzPage() {
         </div>
       </section>
 
-      <section className="border-t border-[var(--line-strong)] pt-8">
+      <section className="az-glass-strong p-5">
         <h3
           className="text-xl font-bold"
           style={{ fontFamily: "var(--font-display), sans-serif" }}

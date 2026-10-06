@@ -1,26 +1,39 @@
 import { AppShell } from "@/components/layout/app-shell";
-import { prisma } from "@server/db";
 import { getStudentAzDashboard } from "@/app/actions/az";
+import { requireUser, initials } from "@server/auth/session";
 import { formatAz } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProfilePage() {
-  const studentId = process.env.DEMO_STUDENT_ID ?? "student-demo-001";
-  const user = await prisma.user.findUnique({ where: { id: studentId } });
-  const { summary } = await getStudentAzDashboard(studentId);
+  const user = await requireUser();
+  const { summary } = await getStudentAzDashboard(user.id);
 
   return (
     <AppShell
-      eyebrow="Profile"
-      title={user?.name ?? "Профиль"}
-      subtitle="Публичные данные ученика. Чувствительная информация другим не показывается."
+      user={user}
+      title="Мой профиль"
+      subtitle="Личный кабинет участника. Чувствительные данные другим не показываются."
     >
-      <div className="grid gap-10 border-y border-[var(--line-strong)] py-8 md:grid-cols-3">
+      <div className="az-glass-strong mb-5 flex flex-wrap items-center gap-4 p-5">
+        <span className="az-brand-grad grid h-16 w-16 place-items-center rounded-full text-lg font-bold text-white">
+          {initials(user.name)}
+        </span>
         <div>
-          <p className="text-[0.7rem] font-bold uppercase tracking-[0.18em] text-[var(--muted)]">
-            Уровень
-          </p>
+          <h2
+            className="text-2xl font-extrabold"
+            style={{ fontFamily: "var(--font-display), sans-serif" }}
+          >
+            {user.name}
+          </h2>
+          <p className="text-sm text-[var(--muted)]">{user.email}</p>
+          {user.about ? <p className="mt-2 max-w-xl text-sm">{user.about}</p> : null}
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className="az-glass-strong p-5">
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Уровень</p>
           <p
             className="mt-2 text-3xl font-extrabold"
             style={{ fontFamily: "var(--font-display), sans-serif" }}
@@ -28,26 +41,26 @@ export default async function ProfilePage() {
             {summary.level?.name ?? "—"}
           </p>
         </div>
-        <div>
-          <p className="text-[0.7rem] font-bold uppercase tracking-[0.18em] text-[var(--muted)]">
-            AZ
-          </p>
+        <div className="az-glass-strong p-5">
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">AZ</p>
           <p
             className="mt-2 text-3xl font-extrabold tabular-nums"
             style={{ fontFamily: "var(--font-display), sans-serif" }}
           >
-            {formatAz(summary.balance)} / {formatAz(summary.maxAvailableAz)}
+            {formatAz(summary.balance)}
+            <span className="text-base font-semibold text-[var(--muted)]">
+              {" "}
+              / {formatAz(summary.maxAvailableAz)}
+            </span>
           </p>
         </div>
-        <div>
-          <p className="text-[0.7rem] font-bold uppercase tracking-[0.18em] text-[var(--muted)]">
-            Роль
-          </p>
+        <div className="az-glass-strong p-5">
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted)]">Статус</p>
           <p
             className="mt-2 text-3xl font-extrabold"
             style={{ fontFamily: "var(--font-display), sans-serif" }}
           >
-            {user?.role ?? "STUDENT"}
+            {user.role === "ADMIN" ? "Admin" : "Участник"}
           </p>
         </div>
       </div>
