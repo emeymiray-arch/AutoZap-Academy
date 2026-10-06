@@ -44,7 +44,7 @@ html[data-theme="light"] {
   --blue: #0360fd;
   --ink: #0b1220;
   --ink-soft: #334155;
-  --paper: #e8eef8;
+  --paper: #ffffff;
   --muted: #64748b;
   --text: #0f172a;
   --accent: #0284c7;
@@ -53,21 +53,21 @@ html[data-theme="light"] {
   --bad: #e11d48;
   --line: rgba(15, 23, 42, 0.12);
   --line-strong: rgba(15, 23, 42, 0.18);
-  --surface: rgba(255, 255, 255, 0.55);
-  --surface-strong: rgba(255, 255, 255, 0.72);
-  --glass-bg: rgba(255, 255, 255, 0.62);
-  --glass-bg-strong: rgba(255, 255, 255, 0.78);
+  --surface: rgba(255, 255, 255, 0.7);
+  --surface-strong: rgba(255, 255, 255, 0.88);
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-bg-strong: rgba(255, 255, 255, 0.88);
   --glass-border: rgba(15, 23, 42, 0.12);
-  --glass-shadow: 0 16px 40px rgba(15, 40, 80, 0.12);
-  --glow-cyan: rgba(3, 205, 253, 0.25);
-  --glow-blue: rgba(3, 96, 253, 0.18);
+  --glass-shadow: 0 12px 32px rgba(15, 40, 80, 0.1);
+  --glow-cyan: rgba(3, 205, 253, 0.2);
+  --glow-blue: rgba(3, 96, 253, 0.14);
   --brand-grad: linear-gradient(135deg, #38bdf8 0%, #0284c7 40%, #0360fd 100%);
-  --aurora-bg: #c7d7ef;
-  --aurora-veil-a: rgba(232, 238, 248, 0.55);
-  --aurora-filter: saturate(0.85) contrast(0.95) brightness(1.35);
-  --input-bg: rgba(255, 255, 255, 0.85);
-  --input-border: rgba(15, 23, 42, 0.16);
-  --btn-bg: rgba(15, 23, 42, 0.06);
+  --aurora-bg: #ffffff;
+  --aurora-veil-a: rgba(255, 255, 255, 0.35);
+  --aurora-filter: saturate(1.05) contrast(1.06) brightness(1);
+  --input-bg: rgba(255, 255, 255, 0.92);
+  --input-border: rgba(15, 23, 42, 0.14);
+  --btn-bg: rgba(15, 23, 42, 0.05);
   --table-line: rgba(15, 23, 42, 0.1);
 }
 
@@ -183,11 +183,22 @@ a {
     radial-gradient(ellipse 45% 35% at 80% 70%, rgba(3, 96, 253, 0.14), transparent 55%);
 }
 
+html[data-theme="light"] .aurora {
+  background: #ffffff;
+}
+
+html[data-theme="light"] .aurora-scene {
+  /* black canvas → white; cyan/blue art kept via invert + hue restore */
+  mix-blend-mode: multiply;
+  filter: invert(1) hue-rotate(180deg) saturate(1.15) contrast(1.05);
+}
+
 html[data-theme="light"] .aurora-veil {
-  background:
-    radial-gradient(ellipse 85% 70% at 50% 45%, transparent 20%, var(--aurora-veil-a) 100%),
-    radial-gradient(ellipse 50% 40% at 20% 20%, rgba(3, 205, 253, 0.08), transparent 60%),
-    radial-gradient(ellipse 45% 35% at 80% 70%, rgba(3, 96, 253, 0.08), transparent 55%);
+  background: radial-gradient(
+    ellipse 90% 75% at 50% 48%,
+    transparent 42%,
+    rgba(255, 255, 255, 0.4) 100%
+  );
 }
 
 @keyframes sceneDrift {
