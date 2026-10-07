@@ -15,12 +15,10 @@ export type SessionPayload = {
   exp: number;
 };
 
-function getSecret(): string {
+function getSecret(): string | null {
   const secret = process.env.SESSION_SECRET;
   if (secret && secret.length >= 32) return secret;
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("SESSION_SECRET must be set (min 32 chars) in production");
-  }
+  if (process.env.NODE_ENV === "production") return null;
   return "dev-only-insecure-session-secret-min-32-chars!";
 }
 
@@ -51,10 +49,10 @@ function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean {
   return diff === 0;
 }
 
-async function hmacSha256(message: string): Promise<Uint8Array> {
+async function hmacSha256(message: string, secret: string): Promise<Uint8Array> {
   const key = await crypto.subtle.importKey(
     "raw",
-    new TextEncoder().encode(getSecret()),
+    new TextEncoder().encode(secret),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"],
@@ -68,24 +66,31 @@ export function sessionMaxAgeSeconds(): number {
 }
 
 export async function createSessionToken(userId: string, sessionVersion: number): Promise<string> {
+  const secret = getSecret();
+  if (!secret) {
+    throw new Error("SESSION_SECRET must be set (min 32 chars) in production");
+  }
   const payload: SessionPayload = {
     sub: userId,
     v: sessionVersion,
     exp: Math.floor(Date.now() / 1000) + sessionMaxAgeSeconds(),
   };
   const body = textToBase64Url(JSON.stringify(payload));
-  const sig = bytesToBase64Url(await hmacSha256(`v1.${body}`));
+  const sig = bytesToBase64Url(await hmacSha256(`v1.${body}`, secret));
   return `v1.${body}.${sig}`;
 }
 
 export async function verifySessionToken(token: string): Promise<SessionPayload | null> {
   try {
+    const secret = getSecret();
+    if (!secret) return null;
+
     const parts = token.split(".");
     if (parts.length !== 3 || parts[0] !== "v1") return null;
     const [, body, sig] = parts;
     if (!body || !sig) return null;
 
-    const expected = await hmacSha256(`v1.${body}`);
+    const expected = await hmacSha256(`v1.${body}`, secret);
     const actual = base64UrlToBytes(sig);
     if (!timingSafeEqual(expected, actual)) return null;
 
