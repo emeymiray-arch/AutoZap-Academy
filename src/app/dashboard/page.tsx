@@ -3,14 +3,14 @@ import { AppShell } from "@/components/layout/app-shell";
 import { AzSpeedStats } from "@/components/az/az-speed-stats";
 import { MedalEmptySlot, MedalTierBlock, type MedalTier } from "@/components/az/rank-medal";
 import { NewsComposeForm } from "@/components/news/news-compose-form";
-import { deleteNewsAction } from "@/app/actions/social";
+import { NewsCard } from "@/components/news/news-card";
 import { loadStudentAzDashboard } from "@server/az/queries";
 import { requireUser } from "@server/auth/session";
 import { prisma } from "@server/db";
 import { createAZService } from "@server/az/az-service";
 import { formatAz } from "@/lib/utils";
 import { displayName, initials } from "@/lib/user";
-import { Award, BookOpen, Newspaper, Sparkles } from "lucide-react";
+import { Award, BookOpen, Newspaper, Sparkles, Users } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -93,47 +93,43 @@ export default async function DashboardPage() {
       ) : null}
 
       <section className="mb-4 border-b border-white/10 pb-4 md:mb-6 md:max-w-3xl md:pb-5">
-        <div className="mb-2 flex items-center justify-between md:mb-3">
-          <h3 className="flex items-center gap-1.5 text-xs font-bold text-[var(--text)] md:text-sm">
-            <Newspaper className="h-3.5 w-3.5 text-[var(--cyan)] md:h-4 md:w-4" />
+        <div className="mb-2 flex items-center justify-between gap-2 md:mb-3">
+          <h3 className="flex items-center gap-1.5 text-sm font-bold text-[var(--ink)] md:text-base">
+            <Newspaper className="h-4 w-4 text-[var(--cyan)]" />
             Новости
           </h3>
-          <Link href="/news" className="text-[0.65rem] text-[var(--cyan)] md:text-xs">
-            все →
-          </Link>
-        </div>
-        {isAdmin ? (
-          <div className="mb-2 flex flex-wrap items-center gap-3 md:mb-3">
-            <NewsComposeForm />
-            <Link href="/admin/participants" className="text-[0.65rem] text-[var(--cyan)] md:text-xs">
-              Участники →
+          <div className="flex items-center gap-2">
+            {isAdmin ? <NewsComposeForm /> : null}
+            {isAdmin ? (
+              <Link
+                href="/admin/participants"
+                className="inline-flex items-center gap-1 rounded-full border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1 text-xs font-bold text-[var(--ink)]"
+              >
+                <Users className="h-3.5 w-3.5" />
+                Участники
+              </Link>
+            ) : null}
+            <Link href="/news" className="text-xs font-medium text-[var(--cyan)]">
+              все →
             </Link>
           </div>
-        ) : null}
-        <ul className="divide-y divide-white/10">
+        </div>
+        <ul className="space-y-2.5">
           {news.map((item) => (
-            <li key={item.id} className="flex items-start justify-between gap-3 py-2.5 md:py-3">
-              <div className="min-w-0">
-                  <p className="text-sm font-semibold text-[var(--text)] md:text-base">{item.title}</p>
-                <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-white/80 md:text-sm">
-                  {item.body}
-                </p>
-              </div>
-              {isAdmin ? (
-                <form action={deleteNewsAction}>
-                  <input type="hidden" name="id" value={item.id} />
-                  <button
-                    type="submit"
-                    className="text-[0.65rem] text-[var(--muted)] hover:text-rose-300 md:text-xs"
-                  >
-                    удалить
-                  </button>
-                </form>
-              ) : null}
+            <li key={item.id}>
+              <NewsCard
+                id={item.id}
+                title={item.title}
+                body={item.body}
+                canDelete={isAdmin}
+                compact
+              />
             </li>
           ))}
           {news.length === 0 ? (
-            <li className="py-2 text-xs text-[var(--muted)] md:text-sm">Новостей пока нет</li>
+            <li className="rounded-2xl border border-dashed border-black/15 bg-white/70 px-3 py-4 text-sm font-semibold text-black/55">
+              Новостей пока нет
+            </li>
           ) : null}
         </ul>
       </section>

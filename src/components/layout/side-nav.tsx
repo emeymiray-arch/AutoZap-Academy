@@ -9,7 +9,6 @@ import {
   Trophy,
   History,
   Users,
-  Settings2,
   UserRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -29,7 +28,6 @@ const nav: NavItem[] = [
   { href: "/leaderboard", label: "Рейтинг", icon: Trophy },
   { href: "/profile", label: "Мой профиль", icon: UserRound },
   { href: "/admin/participants", label: "Участники", icon: Users, adminOnly: true },
-  { href: "/admin/az", label: "AZ CMS", icon: Settings2, adminOnly: true },
 ];
 
 export function SideNav({ role }: { role: Role }) {

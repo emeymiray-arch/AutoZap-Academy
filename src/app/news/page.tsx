@@ -1,6 +1,6 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { NewsComposeForm } from "@/components/news/news-compose-form";
-import { deleteNewsAction } from "@/app/actions/social";
+import { NewsCard } from "@/components/news/news-card";
 import { requireUser } from "@server/auth/session";
 import { prisma } from "@server/db";
 import { displayName } from "@/lib/user";
@@ -20,34 +20,28 @@ export default async function NewsPage() {
 
   return (
     <AppShell user={user} title="Новости">
-      <Link href="/dashboard" className="mb-3 inline-block text-xs text-[var(--cyan)]">
-        ← На главную
-      </Link>
-      {isAdmin ? <NewsComposeForm /> : null}
-      <ul className="mt-3 divide-y divide-white/10">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <Link href="/dashboard" className="text-xs font-medium text-[var(--cyan)]">
+          ← На главную
+        </Link>
+        {isAdmin ? <NewsComposeForm /> : null}
+      </div>
+      <ul className="space-y-3 md:max-w-2xl">
         {news.map((item) => (
-          <li key={item.id} className="flex items-start justify-between gap-3 py-3">
-            <div className="min-w-0">
-              <p className="text-base font-semibold text-white">{item.title}</p>
-              <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-white/85">
-                {item.body}
-              </p>
-              <p className="mt-2 text-[0.65rem] text-[var(--muted)]">
-                {displayName(item.author)} · {item.createdAt.toLocaleString("ru-RU")}
-              </p>
-            </div>
-            {isAdmin ? (
-              <form action={deleteNewsAction}>
-                <input type="hidden" name="id" value={item.id} />
-                <button type="submit" className="text-xs text-[var(--muted)] hover:text-rose-300">
-                  удалить
-                </button>
-              </form>
-            ) : null}
+          <li key={item.id}>
+            <NewsCard
+              id={item.id}
+              title={item.title}
+              body={item.body}
+              meta={`${displayName(item.author)} · ${item.createdAt.toLocaleString("ru-RU")}`}
+              canDelete={isAdmin}
+            />
           </li>
         ))}
         {news.length === 0 ? (
-          <li className="py-4 text-sm text-[var(--muted)]">Новостей пока нет</li>
+          <li className="rounded-2xl border border-dashed border-black/15 bg-white/70 px-3 py-4 text-sm font-semibold text-black/55">
+            Новостей пока нет
+          </li>
         ) : null}
       </ul>
     </AppShell>

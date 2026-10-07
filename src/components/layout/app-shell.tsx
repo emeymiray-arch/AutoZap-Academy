@@ -13,6 +13,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   LogOut,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Role } from "@prisma/client";
@@ -36,6 +37,7 @@ type NavItem = {
   label: string;
   short: string;
   icon: ComponentType<{ className?: string }>;
+  adminOnly?: boolean;
 };
 
 const nav: NavItem[] = [
@@ -45,6 +47,7 @@ const nav: NavItem[] = [
   { href: "/chats", label: "Чаты", short: "Чаты", icon: MessageCircle },
   { href: "/leaderboard", label: "Рейтинг", short: "Топ", icon: Trophy },
   { href: "/profile", label: "Профиль", short: "Я", icon: UserRound },
+  { href: "/admin/participants", label: "Участники", short: "Люди", icon: Users, adminOnly: true },
 ];
 
 export function AppShell({
@@ -60,7 +63,7 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const [expanded, setExpanded] = useState(false);
-  const items = nav;
+  const items = nav.filter((item) => !item.adminOnly || user.role === "ADMIN");
 
   return (
     <div className="w-full max-w-[100vw] min-w-0 overflow-x-clip p-2 sm:p-4">
