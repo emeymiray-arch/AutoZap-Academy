@@ -43,7 +43,15 @@ export async function loginAction(_prev: AuthState, formData: FormData): Promise
   }
 
   clearLoginFailures(`login:${email}`);
-  await createUserSession(user);
+  try {
+    await createUserSession(user);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "";
+    if (message.includes("SESSION_SECRET")) {
+      return { error: "Сервер не настроен (SESSION_SECRET). Попробуйте позже." };
+    }
+    throw err;
+  }
 
   if (!user.consentAcceptedAt) redirect("/consent");
   if (user.mustChangePassword) redirect("/onboarding");
