@@ -11,23 +11,14 @@ export default async function ProfilePage() {
   const user = await requireUser();
   const isAdmin = user.role === "ADMIN";
   const summary = isAdmin ? null : (await loadStudentAzDashboard(user.id)).summary;
+  const label = displayName(user);
 
   return (
     <AppShell user={user} title="Мой профиль">
       <div className="md:mx-auto md:max-w-xl">
-        <div className="mb-3 flex flex-wrap items-center gap-3 py-1 md:mb-5">
-          {user.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={user.avatarUrl} alt="" className="h-14 w-14 rounded-full object-cover md:h-16 md:w-16" />
-          ) : (
-            <span className="az-brand-grad grid h-14 w-14 place-items-center rounded-full text-lg font-bold text-white md:h-16 md:w-16">
-              {initials(displayName(user))}
-            </span>
-          )}
-          <div>
-            <h2 className="text-lg font-extrabold text-[var(--text)] md:text-xl">{displayName(user)}</h2>
-            <p className="text-xs text-[var(--muted)] md:text-sm">{user.email}</p>
-          </div>
+        <div className="mb-3 py-1 md:mb-4">
+          <h2 className="text-lg font-extrabold text-[var(--text)] md:text-xl">{label}</h2>
+          <p className="text-xs text-[var(--muted)] md:text-sm">{user.email}</p>
         </div>
 
         {!isAdmin && summary ? (
@@ -44,6 +35,7 @@ export default async function ProfilePage() {
           nickname={user.nickname ?? ""}
           about={user.about?.replace(/^\[ARCHIVED\]\s*/, "") ?? ""}
           avatarUrl={user.avatarUrl ?? ""}
+          initials={initials(label)}
         />
       </div>
     </AppShell>

@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
-import { Manrope, Unbounded } from "next/font/google";
+import { Source_Sans_3, Unbounded } from "next/font/google";
 import { AuroraScene } from "@/components/layout/aurora-scene";
 import { THEME_COOKIE, themeBootScript } from "@/lib/theme";
 import "./globals.css";
@@ -11,10 +11,10 @@ const display = Unbounded({
   weight: ["500", "600", "700", "800"],
 });
 
-const body = Manrope({
+const body = Source_Sans_3({
   subsets: ["latin", "cyrillic"],
   variable: "--font-body",
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {

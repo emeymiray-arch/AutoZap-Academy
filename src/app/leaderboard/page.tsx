@@ -1,4 +1,9 @@
 import { AppShell } from "@/components/layout/app-shell";
+import {
+  MedalEmptySlot,
+  MedalTierBlock,
+  type MedalTier,
+} from "@/components/az/rank-medal";
 import { createAZService } from "@server/az/az-service";
 import { prisma } from "@server/db";
 import { requireUser } from "@server/auth/session";
@@ -7,6 +12,12 @@ import { displayName, initials } from "@/lib/user";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
+
+const TIERS: { tier: MedalTier; start: number }[] = [
+  { tier: "gold", start: 1 },
+  { tier: "silver", start: 4 },
+  { tier: "bronze", start: 7 },
+];
 
 export default async function LeaderboardPage() {
   const user = await requireUser();
@@ -25,63 +36,99 @@ export default async function LeaderboardPage() {
   const rows = ranking.filter((row) => meta.has(row.userId));
 
   return (
-    <AppShell
-      user={user}
-      title="Рейтинг"
-    >
-      <div className="w-full max-w-full overflow-x-auto">
-        <table className="az-table w-full min-w-0 text-sm sm:min-w-[480px]">
-          <thead>
-            <tr>
-              <th>Место</th>
-              <th>Участник</th>
-              <th>AZ</th>
-              <th>Статус</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, idx) => {
-              const final = byUser.get(row.userId);
-              const person = meta.get(row.userId);
-              const isMe = row.userId === user.id;
-              const label = person ? displayName(person) : row.name;
-              return (
-                <tr key={row.userId} className={isMe ? "bg-[rgba(3,205,253,0.08)]" : undefined}>
-                  <td>
-                    <span className="text-lg font-extrabold tabular-nums">
-                      {String(idx + 1).padStart(2, "0")}
-                    </span>
-                  </td>
-                  <td>
+    <AppShell user={user} title="Рейтинг">
+      <div className="mx-auto grid w-full max-w-4xl gap-4 md:gap-5">
+        {TIERS.map(({ tier, start }) => {
+          const slots = [0, 1, 2].map((offset) => {
+            const place = start + offset;
+            const row = rows[place - 1];
+            return { place, row };
+          });
+
+          return (
+            <MedalTierBlock key={tier} tier={tier}>
+              {slots.map(({ place, row }) => {
+                if (!row) return <MedalEmptySlot key={place} index={place} />;
+
+                const final = byUser.get(row.userId);
+                const person = meta.get(row.userId);
+                const isMe = row.userId === user.id;
+                const label = person ? displayName(person) : row.name;
+
+                return (
+                  <li key={row.userId}>
                     <Link
                       href={`/participants/${row.userId}`}
-                      className="flex items-center gap-2 hover:text-[var(--cyan)]"
+                      className={`flex items-center gap-3 rounded-xl bg-white/70 px-3 py-3 text-black transition hover:bg-white/85 ${
+                        isMe ? "ring-2 ring-black/40" : ""
+                      }`}
                     >
+                      <span className="w-7 shrink-0 text-lg font-black tabular-nums text-black md:text-xl">
+                        {place}.
+                      </span>
                       {person?.avatarUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={person.avatarUrl}
                           alt=""
-                          className="h-8 w-8 rounded-full object-cover"
+                          className="h-10 w-10 shrink-0 rounded-full object-cover md:h-11 md:w-11"
                         />
                       ) : (
-                        <span className="az-brand-grad grid h-8 w-8 place-items-center rounded-full text-[0.6rem] font-bold text-white">
+                        <span className="az-brand-grad grid h-10 w-10 shrink-0 place-items-center rounded-full text-sm font-black text-white md:h-11 md:w-11">
                           {initials(label)}
                         </span>
                       )}
-                      <span className="text-sm font-medium">
+                      <span className="min-w-0 flex-1 truncate text-base font-black text-black md:text-lg">
                         {label}
-                        {isMe ? <span className="ml-2 az-badge az-badge-info">вы</span> : null}
+                        {isMe ? <span className="ml-1.5 font-bold text-black/70">· вы</span> : null}
+                      </span>
+                      <span className="shrink-0 text-base font-black tabular-nums text-black md:text-lg">
+                        {formatAz(row.totalAz)} AZ
+                      </span>
+                      <span className="hidden shrink-0 text-sm font-extrabold text-black/80 sm:inline md:text-base">
+                        {final?.status ?? "—"}
                       </span>
                     </Link>
-                  </td>
-                  <td className="tabular-nums text-sm font-semibold">{formatAz(row.totalAz)}</td>
-                  <td className="text-xs text-[var(--muted)]">{final?.status ?? "—"}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                  </li>
+                );
+              })}
+            </MedalTierBlock>
+          );
+        })}
+
+        {rows.length > 9 ? (
+          <section className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-3 md:p-4">
+            <h3 className="mb-3 text-sm font-bold text-[var(--ink)] md:text-base">Остальные</h3>
+            <ul className="divide-y divide-white/10">
+              {rows.slice(9).map((row, idx) => {
+                const place = 10 + idx;
+                const person = meta.get(row.userId);
+                const isMe = row.userId === user.id;
+                const label = person ? displayName(person) : row.name;
+                return (
+                  <li key={row.userId}>
+                    <Link
+                      href={`/participants/${row.userId}`}
+                      className={`flex items-center gap-3 py-2.5 text-[var(--ink)] md:py-3 ${
+                        isMe ? "text-[var(--cyan)]" : ""
+                      }`}
+                    >
+                      <span className="w-6 text-sm font-bold tabular-nums text-[var(--ink-soft)]">
+                        {place}.
+                      </span>
+                      <span className="min-w-0 flex-1 truncate text-sm font-semibold md:text-base">
+                        {label}
+                      </span>
+                      <span className="text-sm font-bold tabular-nums text-[var(--cyan)] md:text-base">
+                        {formatAz(row.totalAz)}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        ) : null}
       </div>
     </AppShell>
   );

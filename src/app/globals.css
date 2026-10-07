@@ -5,11 +5,11 @@ html[data-theme="dark"] {
   color-scheme: dark;
   --cyan: #03cdfd;
   --blue: #0360fd;
-  --ink: #f4f8ff;
-  --ink-soft: #c8d6ef;
+  --ink: #f7faff;
+  --ink-soft: #d5e0f4;
   --paper: #05060c;
-  --muted: #9eb0cd;
-  --text: #eef3ff;
+  --muted: #b4c3dc;
+  --text: #f4f7ff;
   --accent: #03cdfd;
   --accent-deep: #4db8ff;
   --ok: #34d399;
@@ -42,11 +42,11 @@ html[data-theme="light"] {
   color-scheme: light;
   --cyan: #0284c7;
   --blue: #0360fd;
-  --ink: #0b1220;
-  --ink-soft: #334155;
+  --ink: #000000;
+  --ink-soft: #1e293b;
   --paper: #ffffff;
-  --muted: #64748b;
-  --text: #0f172a;
+  --muted: #475569;
+  --text: #0a0a0a;
   --accent: #0284c7;
   --accent-deep: #0369a1;
   --ok: #059669;
@@ -98,8 +98,14 @@ body {
   margin: 0;
   color: var(--text);
   background: transparent;
-  font-family: var(--font-body), sans-serif;
+  font-family: var(--font-body), "Source Sans 3", sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  font-optical-sizing: auto;
   overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
@@ -432,19 +438,21 @@ html[data-theme="light"] .az-glass-glow::after {
 }
 
 .az-table th {
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--muted);
-  font-weight: 600;
-  padding: 0.85rem 0.75rem;
+  color: var(--ink-soft);
+  font-weight: 700;
+  padding: 1rem 0.85rem;
   border-bottom: 1px solid var(--table-line);
 }
 
 .az-table td {
-  padding: 0.95rem 0.75rem;
+  padding: 1.1rem 0.85rem;
   border-bottom: 1px solid var(--table-line);
   vertical-align: middle;
+  color: var(--ink);
+  font-size: 1rem;
 }
 
 .az-badge {
