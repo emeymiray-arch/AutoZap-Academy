@@ -19,7 +19,6 @@ import { cn } from "@/lib/utils";
 import type { Role } from "@prisma/client";
 import { BrandMark } from "@/components/brand/logo";
 import { NotificationsBell } from "@/components/layout/notifications-bell";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { logoutAction } from "@/app/actions/auth";
 import { displayName, initials } from "@/lib/user";
 
@@ -150,7 +149,6 @@ export function AppShell({
               </span>
             </Link>
             <div className="flex shrink-0 items-center gap-2">
-              <ThemeToggle />
               <NotificationsBell />
               <Link
                 href="/profile"

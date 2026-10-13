@@ -111,12 +111,12 @@ export default async function ModuleHubPage({ params }: Props) {
             Модуль {String(mod.position).padStart(2, "0")}
           </p>
           <h1
-            className="text-3xl font-black text-black md:text-4xl"
+            className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl"
             style={{ fontFamily: "var(--font-display), sans-serif" }}
           >
             {mod.title}
           </h1>
-          <div className="flex flex-wrap gap-3 text-sm font-bold text-black/70">
+          <div className="flex flex-wrap gap-3 text-sm font-medium text-slate-600">
             <span>
               {completedCount}/{mod.lessons.length} уроков
             </span>
@@ -129,7 +129,7 @@ export default async function ModuleHubPage({ params }: Props) {
               </span>
             ) : null}
           </div>
-          <div className="az-glass rounded-2xl bg-white/70 px-3 py-2.5 text-xs font-bold leading-relaxed text-black/70 md:text-sm">
+          <div className="rounded-xl border border-slate-200/90 bg-white/80 px-3.5 py-2.5 text-sm leading-relaxed text-slate-600">
             Как набрать баллы: урок +5 · без ошибок с первого раза +1 · сценарии качества до +2 · задание
             куратора 3–10 · полезные посты в ленте (админ)
           </div>

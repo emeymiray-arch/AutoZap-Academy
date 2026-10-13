@@ -3,7 +3,6 @@
 import { useActionState } from "react";
 import { loginAction, type AuthState } from "@/app/actions/auth";
 import { BrandMark } from "@/components/brand/logo";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
 import Link from "next/link";
 
 const initial: AuthState = {};
@@ -13,9 +12,6 @@ export default function LoginForm() {
 
   return (
     <div className="az-glass-strong az-glass-glow relative w-full max-w-md p-5 sm:p-7">
-      <div className="absolute right-3 top-3">
-        <ThemeToggle />
-      </div>
       <div className="mb-5 flex items-center gap-3">
         <BrandMark size={44} />
         <div>

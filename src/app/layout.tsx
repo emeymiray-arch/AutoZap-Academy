@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { cookies } from "next/headers";
 import { Source_Sans_3, Unbounded } from "next/font/google";
 import { AuroraScene } from "@/components/layout/aurora-scene";
-import { THEME_COOKIE, themeBootScript } from "@/lib/theme";
+import { themeBootScript } from "@/lib/theme";
 import "./globals.css";
 
 const display = Unbounded({
@@ -34,16 +33,12 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const jar = await cookies();
-  const cookieTheme = jar.get(THEME_COOKIE)?.value;
-  const theme = cookieTheme === "light" || cookieTheme === "dark" ? cookieTheme : "dark";
-
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="ru"
       className={`${display.variable} ${body.variable}`}
-      data-theme={theme}
+      data-theme="light"
       suppressHydrationWarning
     >
       <head>

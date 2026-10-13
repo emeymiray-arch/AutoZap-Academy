@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
 import { LessonPlayer } from "@/components/learning/lesson-player";
@@ -67,14 +66,6 @@ export default async function LessonPage({ params }: Props) {
 
   return (
     <AppShell user={user} title={lesson.title} hideTitle>
-      <div className="mb-3">
-        <Link
-          href={`/academy/${moduleSlug}`}
-          className="text-sm font-black text-black/55 hover:text-black"
-        >
-          ← {lesson.module.title}
-        </Link>
-      </div>
       <LessonPlayer
         moduleSlug={moduleSlug}
         moduleTitle={lesson.module.title}

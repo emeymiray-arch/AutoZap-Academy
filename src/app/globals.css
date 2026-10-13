@@ -1,43 +1,6 @@
 @import "tailwindcss";
 
 :root,
-html[data-theme="dark"] {
-  color-scheme: dark;
-  --cyan: #03cdfd;
-  --blue: #0360fd;
-  --ink: #f7faff;
-  --ink-soft: #d5e0f4;
-  --paper: #05060c;
-  --muted: #b4c3dc;
-  --text: #f4f7ff;
-  --accent: #03cdfd;
-  --accent-deep: #4db8ff;
-  --ok: #34d399;
-  --bad: #fb7185;
-  --line: rgba(255, 255, 255, 0.15);
-  --line-strong: rgba(255, 255, 255, 0.22);
-  --surface: rgba(255, 255, 255, 0.05);
-  --surface-strong: rgba(255, 255, 255, 0.08);
-  --glass-bg: rgba(8, 24, 56, 0.28);
-  --glass-bg-strong: rgba(6, 20, 48, 0.34);
-  --glass-border: rgba(255, 255, 255, 0.22);
-  --glass-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
-  --glow-cyan: rgba(3, 205, 253, 0.55);
-  --glow-blue: rgba(3, 96, 253, 0.45);
-  --brand-grad: linear-gradient(135deg, #4ee0ff 0%, #03cdfd 40%, #0360fd 100%);
-  --aurora-bg: #000000;
-  --aurora-veil-a: rgba(0, 0, 0, 0.4);
-  --aurora-filter: saturate(1.05) contrast(1.06) brightness(1);
-  --sidebar-w: 248px;
-  --radius-lg: 26px;
-  --radius-md: 18px;
-  --radius-sm: 14px;
-  --input-bg: rgba(255, 255, 255, 0.06);
-  --input-border: rgba(255, 255, 255, 0.28);
-  --btn-bg: rgba(255, 255, 255, 0.1);
-  --table-line: rgba(255, 255, 255, 0.1);
-}
-
 html[data-theme="light"] {
   color-scheme: light;
   --cyan: #0284c7;
@@ -58,17 +21,33 @@ html[data-theme="light"] {
   --glass-bg: rgba(255, 255, 255, 0.72);
   --glass-bg-strong: rgba(255, 255, 255, 0.88);
   --glass-border: rgba(15, 23, 42, 0.12);
-  --glass-shadow: 0 12px 32px rgba(15, 40, 80, 0.1);
+  --glass-shadow: 0 8px 24px rgba(15, 40, 80, 0.06);
   --glow-cyan: rgba(3, 205, 253, 0.2);
   --glow-blue: rgba(3, 96, 253, 0.14);
   --brand-grad: linear-gradient(135deg, #38bdf8 0%, #0284c7 40%, #0360fd 100%);
   --aurora-bg: #ffffff;
   --aurora-veil-a: rgba(255, 255, 255, 0.35);
   --aurora-filter: saturate(1.05) contrast(1.06) brightness(1);
+  --sidebar-w: 248px;
+  --radius-lg: 26px;
+  --radius-md: 18px;
+  --radius-sm: 14px;
   --input-bg: rgba(255, 255, 255, 0.92);
   --input-border: rgba(15, 23, 42, 0.14);
   --btn-bg: rgba(15, 23, 42, 0.05);
   --table-line: rgba(15, 23, 42, 0.1);
+  /* Reading measure & type scale */
+  --read-measure: 44rem;
+  --read-size: 1.0625rem;
+  --read-leading: 1.72;
+  --read-para-gap: 1.15rem;
+  --read-section-gap: 2.25rem;
+  --read-ink: #0a0a0a;
+  --read-muted: #334155;
+  --read-rule: rgba(15, 23, 42, 0.1);
+  --read-note-bg: rgba(2, 132, 199, 0.06);
+  --read-warn-bg: rgba(245, 158, 11, 0.1);
+  --read-ok-bg: rgba(5, 150, 105, 0.08);
 }
 
 @theme inline {
@@ -101,14 +80,175 @@ body {
   background: transparent;
   font-family: var(--font-body), "Source Sans 3", sans-serif;
   font-size: 17px;
-  line-height: 1.6;
-  letter-spacing: 0.01em;
+  line-height: 1.65;
+  letter-spacing: 0.005em;
   font-optical-sizing: auto;
   overflow-x: clip;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+}
+
+/* Lesson / long-form reading surface */
+.az-lesson {
+  width: 100%;
+  max-width: var(--read-measure);
+  margin-inline: auto;
+  color: var(--read-ink);
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 1.25rem;
+  padding: 1.15rem 1.15rem 1.5rem;
+  box-shadow: 0 10px 28px rgba(15, 40, 80, 0.05);
+}
+
+@media (min-width: 768px) {
+  .az-lesson {
+    padding: 1.5rem 2rem 2rem;
+  }
+}
+
+.az-lesson[data-text-scale="lg"] {
+  --read-size: 1.125rem;
+  --read-leading: 1.75;
+}
+
+.az-prose {
+  font-size: var(--read-size);
+  line-height: var(--read-leading);
+  font-weight: 400;
+  color: var(--read-ink);
+}
+
+.az-prose p {
+  margin: 0 0 var(--read-para-gap);
+}
+
+.az-prose p:last-child {
+  margin-bottom: 0;
+}
+
+.az-prose-h1 {
+  font-family: var(--font-display), var(--font-body), sans-serif;
+  font-size: clamp(1.55rem, 2.4vw, 1.95rem);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--read-ink);
+}
+
+.az-prose-h2 {
+  font-family: var(--font-display), var(--font-body), sans-serif;
+  font-size: clamp(1.15rem, 1.6vw, 1.3rem);
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.015em;
+  color: var(--read-ink);
+  margin: 0 0 0.65rem;
+}
+
+.az-prose-lead {
+  font-size: calc(var(--read-size) * 1.05);
+  line-height: 1.6;
+  font-weight: 500;
+  color: var(--read-muted);
+}
+
+.az-prose-meta {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--cyan);
+}
+
+.az-prose-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.az-prose-list > li {
+  display: flex;
+  gap: 0.7rem;
+  font-size: var(--read-size);
+  line-height: var(--read-leading);
+  font-weight: 400;
+  color: var(--read-ink);
+}
+
+.az-prose-list > li > .az-bullet {
+  margin-top: 0.7em;
+  width: 0.35rem;
+  height: 0.35rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--cyan);
+  opacity: 0.85;
+}
+
+.az-note {
+  border-left: 3px solid var(--cyan);
+  background: var(--read-note-bg);
+  border-radius: 0 0.75rem 0.75rem 0;
+  padding: 0.9rem 1rem 0.9rem 1.05rem;
+}
+
+.az-note[data-tone="warn"] {
+  border-left-color: #d97706;
+  background: var(--read-warn-bg);
+}
+
+.az-note[data-tone="ok"] {
+  border-left-color: #059669;
+  background: var(--read-ok-bg);
+}
+
+.az-note-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--read-ink);
+  margin: 0 0 0.35rem;
+}
+
+.az-note-body {
+  font-size: var(--read-size);
+  line-height: var(--read-leading);
+  font-weight: 400;
+  color: var(--read-ink);
+  margin: 0;
+  opacity: 0.92;
+}
+
+.az-interactive {
+  border: 1px solid var(--read-rule);
+  background: rgba(255, 255, 255, 0.82);
+  border-radius: 1rem;
+  padding: 1rem 1.1rem;
+}
+
+.az-section {
+  scroll-margin-top: 5.5rem;
+  padding-top: 0.25rem;
+}
+
+.az-lesson-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--read-section-gap);
+}
+
+@media (max-width: 640px) {
+  :root {
+    --read-size: 1rem;
+    --read-leading: 1.68;
+    --read-para-gap: 1rem;
+    --read-section-gap: 1.75rem;
+  }
 }
 
 html[data-theme="light"] .text-white {

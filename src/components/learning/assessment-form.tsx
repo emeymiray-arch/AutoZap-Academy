@@ -71,18 +71,11 @@ export function AssessmentForm(props: Props) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-6 pb-16">
-      <header className="space-y-2">
-        <p className="text-xs font-black uppercase tracking-[0.14em] text-[var(--cyan)]">
-          Модуль · Финальная проверка
-        </p>
-        <h1
-          className="text-2xl font-black text-[var(--text)] md:text-3xl"
-          style={{ fontFamily: "var(--font-display), sans-serif" }}
-        >
-          {props.title}
-        </h1>
-        <p className="text-sm font-bold text-[var(--muted)] md:text-base">
+    <div className="az-lesson space-y-7 pb-16">
+      <header className="space-y-2 border-b border-[var(--read-rule)] pb-5">
+        <p className="az-prose-meta m-0">Модуль · Финальная проверка</p>
+        <h1 className="az-prose-h1">{props.title}</h1>
+        <p className="az-prose-lead m-0">
           Автопроверка + ответ своими словами для куратора. Проходной балл: {props.passScore}%.
         </p>
       </header>
@@ -164,7 +157,7 @@ export function AssessmentForm(props: Props) {
               type="button"
               disabled={pending}
               onClick={handleSubmit}
-              className="inline-flex items-center gap-2 rounded-xl bg-[var(--cyan)] px-5 py-3 text-sm font-black text-[#fff] shadow-[0_0_16px_rgba(3,205,253,0.35)] disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg bg-[var(--cyan)] px-5 py-2.5 text-sm font-semibold text-[#fff] disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cyan)]"
             >
               {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               {result ? "Отправить снова" : "Отправить ответы"}
@@ -199,19 +192,15 @@ function QuestionCard({
 }) {
   if (question.type === "freeText") {
     return (
-      <div className="rounded-2xl border border-[var(--line-strong)] bg-[var(--surface)] p-4 md:p-5">
-        <p className="text-xs font-black uppercase tracking-wider text-[var(--muted)]">
-          Вопрос {index} · куратор
-        </p>
-        <p className="mt-2 text-base font-black text-[var(--text)]">{question.prompt}</p>
-        {question.hint ? (
-          <p className="mt-1 text-sm font-bold text-[var(--muted)]">{question.hint}</p>
-        ) : null}
+      <div className="az-interactive">
+        <p className="az-prose-meta m-0">Вопрос {index} · куратор</p>
+        <p className="mt-2 m-0 text-[1.05em] font-semibold leading-snug">{question.prompt}</p>
+        {question.hint ? <p className="mt-1 m-0 text-sm text-[var(--read-muted)]">{question.hint}</p> : null}
         <textarea
           value={freeText}
           onChange={(e) => onFreeText(e.target.value)}
           rows={6}
-          className="mt-3 w-full rounded-xl border border-[var(--line-strong)] bg-white px-3 py-2 text-sm font-bold text-[var(--text)] outline-none focus:border-[var(--cyan)] md:text-base"
+          className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[var(--read-size)] font-normal leading-relaxed text-[var(--read-ink)] outline-none focus:border-[var(--cyan)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cyan)]"
           placeholder="Напишите ответ своими словами…"
         />
       </div>
@@ -222,15 +211,15 @@ function QuestionCard({
     const rights = question.pairs.map((p) => p.right);
     const current = (value as Record<string, string>) ?? {};
     return (
-      <div className="rounded-2xl border border-[var(--line-strong)] bg-[var(--surface)] p-4 md:p-5">
-        <p className="text-xs font-black uppercase tracking-wider text-[var(--muted)]">Вопрос {index}</p>
-        <p className="mt-2 text-base font-black text-[var(--text)]">{question.prompt}</p>
+      <div className="az-interactive">
+        <p className="az-prose-meta m-0">Вопрос {index}</p>
+        <p className="mt-2 m-0 text-[1.05em] font-semibold leading-snug">{question.prompt}</p>
         <div className="mt-3 space-y-3">
           {question.pairs.map((pair) => (
             <label key={pair.left} className="block">
-              <span className="text-sm font-black text-[var(--text)]">{pair.left}</span>
+              <span className="text-sm font-semibold text-[var(--read-ink)]">{pair.left}</span>
               <select
-                className="mt-1 w-full rounded-xl border border-[var(--line-strong)] bg-white px-3 py-2 text-sm font-bold text-[var(--text)]"
+                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-[var(--read-ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cyan)]"
                 value={current[pair.left] ?? ""}
                 onChange={(e) => onChange({ ...current, [pair.left]: e.target.value })}
               >
@@ -256,13 +245,13 @@ function QuestionCard({
         : [];
 
   return (
-    <div className="rounded-2xl border border-[var(--line-strong)] bg-[var(--surface)] p-4 md:p-5">
-      <p className="text-xs font-black uppercase tracking-wider text-[var(--muted)]">
+    <div className="az-interactive">
+      <p className="az-prose-meta m-0">
         Вопрос {index}
         {question.type === "findError" ? " · найдите ошибку" : ""}
         {question.type === "scenario" ? " · сценарий" : ""}
       </p>
-      <p className="mt-2 text-base font-black text-[var(--text)]">{question.prompt}</p>
+      <p className="mt-2 m-0 text-[1.05em] font-semibold leading-snug">{question.prompt}</p>
       <div className="mt-3 space-y-2">
         {options.map((opt) => (
           <button
@@ -270,10 +259,10 @@ function QuestionCard({
             type="button"
             onClick={() => onChange(opt.id)}
             className={cn(
-              "w-full rounded-xl border px-3 py-2.5 text-left text-sm font-bold md:text-base",
+              "w-full rounded-xl border px-3.5 py-3 text-left text-[0.98em] font-medium leading-snug transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cyan)]",
               value === opt.id
-                ? "border-[var(--cyan)] bg-[var(--cyan)]/10 text-[var(--text)]"
-                : "border-[var(--line-strong)] bg-white text-[var(--text)] hover:border-[var(--cyan)]/40",
+                ? "border-[var(--cyan)] bg-sky-50 text-[var(--read-ink)]"
+                : "border-slate-200 bg-white text-[var(--read-ink)] hover:border-slate-300",
             )}
           >
             {opt.label}

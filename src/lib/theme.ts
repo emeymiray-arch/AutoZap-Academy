@@ -1,4 +1,4 @@
 export const THEME_COOKIE = "az_theme";
 
-/** Inline boot script — place in <head> to avoid FOUC */
-export const themeBootScript = `(function(){try{var k='az_theme';var t=localStorage.getItem(k);if(t!=='light'&&t!=='dark'){var m=document.cookie.match(/(?:^|; )az_theme=([^;]+)/);t=m?decodeURIComponent(m[1]):'dark';}if(t!=='light'&&t!=='dark')t='dark';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();`;
+/** Force light theme and clear any leftover dark preference. */
+export const themeBootScript = `(function(){try{document.documentElement.setAttribute('data-theme','light');localStorage.setItem('az_theme','light');document.cookie='az_theme=light; path=/; max-age=31536000; samesite=lax';}catch(e){document.documentElement.setAttribute('data-theme','light');}})();`;
