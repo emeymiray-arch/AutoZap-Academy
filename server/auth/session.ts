@@ -72,10 +72,24 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   const payload = await verifySessionToken(raw);
   if (!payload) return null;
 
-  const user = await prisma.user.findUnique({
-    where: { id: payload.sub },
-    select: sessionSelect,
-  });
+  // Neon can briefly refuse connections while the compute wakes up — retry once.
+  let user;
+  try {
+    user = await prisma.user.findUnique({
+      where: { id: payload.sub },
+      select: sessionSelect,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (!/Can't reach database server|P1001|Connection|ECONNREFUSED|ETIMEDOUT/i.test(message)) {
+      throw err;
+    }
+    await new Promise((r) => setTimeout(r, 1200));
+    user = await prisma.user.findUnique({
+      where: { id: payload.sub },
+      select: sessionSelect,
+    });
+  }
   if (!user) return null;
   if (user.sessionVersion !== payload.v) return null;
   if (user.about?.startsWith("[ARCHIVED]")) return null;

@@ -10,6 +10,8 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed:module1": "tsx prisma/seed-module1.ts",
+    "db:seed:module2": "tsx prisma/seed-module2.ts",
     "db:studio": "prisma studio",
     "test:az": "tsx --test server/az/az-service.test.ts",
     "test:auth": "tsx --test server/auth/session-token.test.ts",

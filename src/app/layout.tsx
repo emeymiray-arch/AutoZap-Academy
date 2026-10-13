@@ -7,7 +7,8 @@ import "./globals.css";
 
 const display = Unbounded({
   subsets: ["latin", "cyrillic"],
-  variable: "--font-display",
+  // Next injects the real family here; Tailwind theme maps --font-display → this token
+  variable: "--font-unbounded",
   weight: ["500", "600", "700", "800"],
 });
 

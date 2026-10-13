@@ -5,6 +5,7 @@ import { prisma } from "@server/db";
 import { formatAz } from "@/lib/utils";
 import { displayName, initials } from "@/lib/user";
 import Link from "next/link";
+import { Check, Clock } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -17,11 +18,24 @@ export default async function AdminParticipantsPage() {
     orderBy: { createdAt: "desc" },
   });
 
+  const pending = await prisma.assignmentSubmission.groupBy({
+    by: ["userId"],
+    where: {
+      status: { in: ["SUBMITTED", "IN_REVIEW"] },
+      reviewedAt: null,
+    },
+    _count: { _all: true },
+  });
+  const reviewed = await prisma.assignmentSubmission.groupBy({
+    by: ["userId"],
+    where: { reviewedAt: { not: null } },
+    _count: { _all: true },
+  });
+  const pendingByUser = new Map(pending.map((p) => [p.userId, p._count._all]));
+  const reviewedByUser = new Map(reviewed.map((r) => [r.userId, r._count._all]));
+
   return (
-    <AppShell
-      user={admin}
-      title="Участники"
-    >
+    <AppShell user={admin} title="Участники">
       <div className="grid gap-5 lg:grid-cols-[1fr_1.2fr]">
         <section>
           <h2 className="mb-3 text-base font-bold">Создать участника</h2>
@@ -31,17 +45,20 @@ export default async function AdminParticipantsPage() {
         <section>
           <h2 className="mb-2 text-base font-bold">Список ({students.length})</h2>
           <div className="w-full max-w-full overflow-x-auto">
-            <table className="az-table w-full min-w-0 text-sm sm:min-w-[480px]">
+            <table className="az-table w-full min-w-0 text-sm sm:min-w-[520px]">
               <thead>
                 <tr>
                   <th>Участник</th>
                   <th>AZ</th>
+                  <th>Ответ</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>
                 {students.map((s) => {
                   const archived = s.about?.startsWith("[ARCHIVED]");
+                  const wait = pendingByUser.get(s.id) ?? 0;
+                  const done = reviewedByUser.get(s.id) ?? 0;
                   return (
                     <tr key={s.id}>
                       <td>
@@ -68,6 +85,35 @@ export default async function AdminParticipantsPage() {
                         {formatAz(s.azBalance?.balance ?? 0)}
                       </td>
                       <td>
+                        {wait > 0 ? (
+                          <Link
+                            href={`/admin/participants/${s.id}/review`}
+                            className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-[0.7rem] font-black text-amber-900 hover:bg-amber-200"
+                          >
+                            <Clock className="h-3 w-3" />
+                            Ждёт · {wait}
+                          </Link>
+                        ) : done > 0 ? (
+                          <Link
+                            href={`/admin/participants/${s.id}/review`}
+                            className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-[0.7rem] font-black text-emerald-800 hover:bg-emerald-200"
+                          >
+                            <Check className="h-3 w-3" />
+                            Оценено
+                          </Link>
+                        ) : (
+                          <span className="text-[0.7rem] font-bold text-[var(--muted)]">—</span>
+                        )}
+                      </td>
+                      <td className="space-x-2 whitespace-nowrap">
+                        {(wait > 0 || done > 0) && (
+                          <Link
+                            href={`/admin/participants/${s.id}/review`}
+                            className="text-xs font-black text-[var(--cyan)] hover:underline"
+                          >
+                            Проверить
+                          </Link>
+                        )}
                         <Link
                           href={`/participants/${s.id}`}
                           className="text-xs text-[var(--cyan)] hover:underline"
@@ -75,7 +121,7 @@ export default async function AdminParticipantsPage() {
                           Профиль
                         </Link>
                         {archived ? (
-                          <span className="ml-2 az-badge az-badge-muted">архив</span>
+                          <span className="ml-1 az-badge az-badge-muted">архив</span>
                         ) : null}
                       </td>
                     </tr>

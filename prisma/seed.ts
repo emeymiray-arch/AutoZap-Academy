@@ -1,6 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import { AZService } from "../server/az/az-service";
 import { hashPassword } from "../server/auth/password";
+import { seedModule1Content } from "./seed-module1";
+import { seedModule2Content } from "./seed-module2";
 
 const prisma = new PrismaClient();
 
@@ -23,6 +25,9 @@ async function main() {
   await prisma.azLevelRule.deleteMany();
   await prisma.rankingTieBreakRule.deleteMany();
   await prisma.assignmentSubmission.deleteMany();
+  await prisma.assessmentAttempt.deleteMany();
+  await prisma.moduleAssessment.deleteMany();
+  await prisma.lessonProgress.deleteMany();
   await prisma.assignment.deleteMany();
   await prisma.quiz.deleteMany();
   await prisma.lesson.deleteMany();
@@ -120,9 +125,14 @@ async function main() {
         courseId: course.id,
         slug: `module-${i + 1}`,
         title: moduleTitles[i],
-        description: "Контент будет добавлен командой AutoZap.",
+        description:
+          i === 0
+            ? "Целостное понимание продукта, возможностей, аудитории и ценности для бизнеса."
+            : i === 1
+              ? "Направления продукта: маркетплейс, поставщики, логистика, финансы, автосервисы и дополнительные сервисы."
+              : "Контент будет добавлен командой AutoZap.",
         position: i + 1,
-        status: i === 0 ? "PUBLISHED" : "DRAFT",
+        status: "PUBLISHED",
       },
     });
     modules.push(mod);
@@ -131,12 +141,13 @@ async function main() {
   const module1 = modules[0];
   const lessonTitles = [
     "Что такое AutoZap",
-    "Экосистема AutoZap",
+    "Как устроен AutoZap и какие возможности он предоставляет",
     "Для кого существует AutoZap",
     "Как работает AutoZap",
-    "Что получает магазин",
-    "Что получает автовладелец",
-    "Стратегия и развитие AutoZap",
+    "Что получает магазин, подключаясь к AutoZap",
+    "Как AutoZap помогает с поставками из Китая",
+    "Какие финансовые возможности предоставляет AutoZap",
+    "Как менеджеру выявлять потребности и презентовать AutoZap",
   ];
 
   const lessons = [];
@@ -156,8 +167,9 @@ async function main() {
   const assignment = await prisma.assignment.create({
     data: {
       moduleId: module1.id,
-      title: "Практическое задание — Модуль 1",
-      description: "Контент будет добавлен командой AutoZap.",
+      title: "Объясни своими словами — Модуль 1",
+      description:
+        "Свободный ответ из финальной проверки модуля. Куратор проверяет понимание AutoZap как автомобильного маркетплейса с торговыми, логистическими и финансовыми возможностями.",
     },
   });
 
@@ -168,6 +180,9 @@ async function main() {
     },
   });
 
+  await seedModule1Content(prisma);
+  await seedModule2Content(prisma);
+
   const az = new AZService(prisma);
 
   // Levels — configurable, not hardcoded in domain logic beyond seed defaults
@@ -175,42 +190,7 @@ async function main() {
   await az.createLevelRule({ slug: "silver", name: "Silver", minAz: 100, maxAz: 300, sortOrder: 2 });
   await az.createLevelRule({ slug: "gold", name: "Gold", minAz: 300, maxAz: null, sortOrder: 3 });
 
-  // Lesson rules — different max per lesson (proves no global LESSON_COMPLETION_AZ)
-  for (let i = 0; i < lessons.length; i++) {
-    const maxAz = 20 + i * 5; // 20, 25, 30...
-    await az.createRewardRule({
-      actionType: "LESSON_COMPLETED",
-      scopeType: "LESSON",
-      courseId: course.id,
-      moduleId: module1.id,
-      lessonId: lessons[i].id,
-      name: `Module 1 / Lesson ${i + 1} completion`,
-      maxAz,
-      allowsPartial: false,
-      allowsRepeat: false,
-      qualityDependent: false,
-      createdById: admin.id,
-    });
-  }
-
-  // Assignment — quality-dependent, partial allowed
-  await az.createRewardRule({
-    actionType: "ASSIGNMENT_REVIEWED",
-    scopeType: "MODULE",
-    courseId: course.id,
-    moduleId: module1.id,
-    name: "Module 1 practice assignment",
-    maxAz: 10,
-    allowsPartial: true,
-    allowsRepeat: false,
-    qualityDependent: true,
-    qualityRanges: [
-      { label: "Плохо", minAz: 0, maxAz: 3, criteria: "Существенные ошибки", sortOrder: 0 },
-      { label: "Средне", minAz: 4, maxAz: 7, criteria: "Основные требования выполнены", sortOrder: 1 },
-      { label: "Хорошо", minAz: 8, maxAz: 10, criteria: "Полное соответствие", sortOrder: 2 },
-    ],
-    createdById: admin.id,
-  });
+  // Lesson + assignment AZ defaults are owned by seedModule1Content (+5 / 3–10)
 
   // Quiz rule for module 1
   await az.createRewardRule({
@@ -219,7 +199,7 @@ async function main() {
     courseId: course.id,
     moduleId: module1.id,
     name: "Module 1 quiz",
-    maxAz: 30,
+    maxAz: 10,
     allowsPartial: true,
     allowsRepeat: true,
     qualityDependent: false,
@@ -240,7 +220,7 @@ async function main() {
     actionType: "LESSON_COMPLETED",
     sourceType: "lesson",
     sourceId: lessons[0].id,
-    amount: 20,
+    amount: 5,
     reason: "Урок завершён",
     idempotencyKey: `seed:lesson:${student.id}:${lessons[0].id}`,
     courseId: course.id,
@@ -267,7 +247,7 @@ async function main() {
     actionType: "LESSON_COMPLETED",
     sourceType: "lesson",
     sourceId: lessons[0].id,
-    amount: 20,
+    amount: 5,
     reason: "Урок завершён",
     idempotencyKey: `seed:lesson:${student2.id}:${lessons[0].id}`,
     courseId: course.id,
@@ -280,7 +260,7 @@ async function main() {
     actionType: "QUIZ_COMPLETED",
     sourceType: "quiz",
     sourceId: `quiz-mod1`,
-    amount: 30,
+    amount: 10,
     reason: "Тест пройден",
     idempotencyKey: `seed:quiz:${student3.id}:mod1`,
     courseId: course.id,

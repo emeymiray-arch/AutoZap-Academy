@@ -80,6 +80,69 @@ export async function createAzRewardRuleAction(input: z.infer<typeof createRuleS
   revalidatePath("/admin/az");
 }
 
+/** Form-friendly create: targetId = "lesson:id" | "module:id" | "assignment-module:id" */
+export async function createAzRewardRuleFromFormAction(formData: FormData) {
+  const admin = await requireAdmin();
+  const name = String(formData.get("name") ?? "").trim();
+  const actionType = String(formData.get("actionType") ?? "LESSON_COMPLETED") as z.infer<
+    typeof createRuleSchema
+  >["actionType"];
+  const scopeType = String(formData.get("scopeType") ?? "LESSON") as z.infer<
+    typeof createRuleSchema
+  >["scopeType"];
+  const maxAz = Number.parseInt(String(formData.get("maxAz") ?? "0"), 10);
+  const allowsPartial = formData.get("allowsPartial") === "on";
+  const qualityDependent = formData.get("qualityDependent") === "on";
+  const target = String(formData.get("targetId") ?? "");
+
+  let courseId: string | null = null;
+  let moduleId: string | null = null;
+  let lessonId: string | null = null;
+  let resolvedScope = scopeType;
+
+  if (target.startsWith("lesson:")) {
+    lessonId = target.slice("lesson:".length);
+    const lesson = await prisma.lesson.findUnique({
+      where: { id: lessonId },
+      include: { module: true },
+    });
+    if (!lesson) throw new Error("Урок не найден");
+    moduleId = lesson.moduleId;
+    courseId = lesson.module.courseId;
+    resolvedScope = "LESSON";
+  } else if (target.startsWith("module:") || target.startsWith("assignment-module:")) {
+    moduleId = target.includes("assignment-module:")
+      ? target.slice("assignment-module:".length)
+      : target.slice("module:".length);
+    const mod = await prisma.module.findUnique({ where: { id: moduleId } });
+    if (!mod) throw new Error("Модуль не найден");
+    courseId = mod.courseId;
+    resolvedScope = "MODULE";
+    if (target.startsWith("assignment-module:") && actionType === "LESSON_COMPLETED") {
+      // assignment targets should use ASSIGNMENT_REVIEWED
+    }
+  }
+
+  await az.createRewardRule({
+    name,
+    actionType:
+      target.startsWith("assignment-module:") && actionType === "LESSON_COMPLETED"
+        ? "ASSIGNMENT_REVIEWED"
+        : actionType,
+    scopeType: resolvedScope,
+    maxAz: Number.isFinite(maxAz) ? maxAz : 0,
+    allowsPartial,
+    allowsRepeat: false,
+    qualityDependent,
+    courseId,
+    moduleId,
+    lessonId,
+    createdById: admin.id,
+  });
+
+  revalidatePath("/admin/az");
+}
+
 export async function setModuleMaxOverrideAction(formData: FormData) {
   await requireAdmin();
   const moduleId = String(formData.get("moduleId"));
@@ -90,6 +153,114 @@ export async function setModuleMaxOverrideAction(formData: FormData) {
 
   await az.setModuleMaximumOverride(moduleId, override, useOverride);
   revalidatePath("/admin/az");
+}
+
+/** Inline admin control: set AZ for a lesson or module assignment without a separate settings page */
+export async function setScopedRewardAzAction(input: {
+  kind: "lesson" | "assignment";
+  moduleId: string;
+  moduleSlug: string;
+  lessonId?: string;
+  maxAz: number;
+}) {
+  const admin = await requireAdmin();
+  const maxAz = Math.max(0, Math.min(100, Math.floor(input.maxAz)));
+
+  const mod = await prisma.module.findUniqueOrThrow({
+    where: { id: input.moduleId },
+    select: { id: true, courseId: true, title: true, slug: true },
+  });
+
+  if (input.kind === "lesson") {
+    if (!input.lessonId) throw new Error("lessonId required");
+    const lesson = await prisma.lesson.findUniqueOrThrow({
+      where: { id: input.lessonId },
+      select: { id: true, title: true, position: true, moduleId: true },
+    });
+    if (lesson.moduleId !== mod.id) throw new Error("Урок не из этого модуля");
+
+    const existing = await prisma.azRewardRule.findFirst({
+      where: { actionType: "LESSON_COMPLETED", lessonId: lesson.id, active: true },
+      include: { versions: { where: { active: true }, orderBy: { version: "desc" }, take: 1 } },
+    });
+
+    if (!existing) {
+      await az.createRewardRule({
+        actionType: "LESSON_COMPLETED",
+        scopeType: "LESSON",
+        courseId: mod.courseId,
+        moduleId: mod.id,
+        lessonId: lesson.id,
+        name: `${mod.title} / Lesson ${lesson.position}`,
+        maxAz,
+        allowsPartial: false,
+        allowsRepeat: false,
+        qualityDependent: false,
+        createdById: admin.id,
+      });
+    } else {
+      await az.publishRewardRuleVersion({
+        ruleId: existing.id,
+        maxAz,
+        allowsPartial: false,
+        allowsRepeat: false,
+        qualityDependent: false,
+        applyMode: "FUTURE_ONLY",
+        createdById: admin.id,
+        note: "Inline admin edit",
+      });
+    }
+  } else {
+    const existing = await prisma.azRewardRule.findFirst({
+      where: { actionType: "ASSIGNMENT_REVIEWED", moduleId: mod.id, active: true },
+      include: { versions: { where: { active: true }, orderBy: { version: "desc" }, take: 1 } },
+    });
+    const ranges = [
+      { label: "Слабо", minAz: Math.min(3, maxAz), maxAz: Math.min(4, maxAz), sortOrder: 0 },
+      { label: "Средне", minAz: Math.min(5, maxAz), maxAz: Math.min(7, maxAz), sortOrder: 1 },
+      { label: "Хорошо", minAz: Math.min(8, maxAz), maxAz, sortOrder: 2 },
+    ].filter((r) => r.minAz <= r.maxAz && r.maxAz > 0);
+
+    if (!existing) {
+      await az.createRewardRule({
+        actionType: "ASSIGNMENT_REVIEWED",
+        scopeType: "MODULE",
+        courseId: mod.courseId,
+        moduleId: mod.id,
+        name: `${mod.title} — задание`,
+        maxAz,
+        allowsPartial: true,
+        allowsRepeat: false,
+        qualityDependent: true,
+        qualityRanges: ranges.length
+          ? ranges
+          : [{ label: "Базовый", minAz: 0, maxAz, sortOrder: 0 }],
+        createdById: admin.id,
+      });
+    } else {
+      await az.publishRewardRuleVersion({
+        ruleId: existing.id,
+        maxAz,
+        allowsPartial: true,
+        allowsRepeat: false,
+        qualityDependent: true,
+        qualityRanges: ranges.length
+          ? ranges
+          : [{ label: "Базовый", minAz: 0, maxAz, sortOrder: 0 }],
+        applyMode: "FUTURE_ONLY",
+        createdById: admin.id,
+        note: "Inline admin edit",
+      });
+    }
+  }
+
+  revalidatePath("/academy");
+  revalidatePath(`/academy/${input.moduleSlug}`);
+  revalidatePath(`/academy/${input.moduleSlug}/assessment`);
+  if (input.lessonId) {
+    const lesson = await prisma.lesson.findUnique({ where: { id: input.lessonId } });
+    if (lesson) revalidatePath(`/academy/${input.moduleSlug}/${lesson.slug}`);
+  }
 }
 
 export async function runFinalRankingAction() {

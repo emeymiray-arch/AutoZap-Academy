@@ -55,11 +55,14 @@ export function AppShell({
   title,
   subtitle,
   user,
+  hideTitle = false,
 }: {
   children: React.ReactNode;
   title: string;
   subtitle?: string;
   user: ShellUser;
+  /** When content already has its own H1 (lessons, assessment). */
+  hideTitle?: boolean;
 }) {
   const pathname = usePathname();
   const [expanded, setExpanded] = useState(false);
@@ -197,19 +200,21 @@ export function AppShell({
           </nav>
 
           <main className="min-w-0 w-full flex-1 overflow-x-clip px-0.5 py-1 sm:px-2 sm:py-3">
-            <div className="az-rise mb-3 min-w-0 sm:mb-4">
-              <h1
-                className="break-words text-xl font-extrabold tracking-tight text-[var(--text)] sm:text-2xl"
-                style={{ fontFamily: "var(--font-display), sans-serif" }}
-              >
-                {title}
-              </h1>
-              {subtitle ? (
-                <p className="mt-1 break-words text-xs leading-relaxed text-[var(--muted)] sm:text-sm">
-                  {subtitle}
-                </p>
-              ) : null}
-            </div>
+            {!hideTitle ? (
+              <div className="az-rise mb-3 min-w-0 sm:mb-4">
+                <h1
+                  className="break-words text-xl font-extrabold tracking-tight text-[var(--text)] sm:text-2xl"
+                  style={{ fontFamily: "var(--font-display), sans-serif" }}
+                >
+                  {title}
+                </h1>
+                {subtitle ? (
+                  <p className="mt-1 break-words text-xs leading-relaxed text-[var(--muted)] sm:text-sm">
+                    {subtitle}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
             <div className="az-rise-delay min-w-0 w-full overflow-x-clip">{children}</div>
           </main>
         </div>

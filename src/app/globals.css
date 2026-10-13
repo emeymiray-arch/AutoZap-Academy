@@ -75,7 +75,8 @@ html[data-theme="light"] {
   --color-background: var(--paper);
   --color-foreground: var(--text);
   --font-sans: var(--font-body);
-  --font-display: var(--font-display);
+  /* Must point at next/font var — self-reference breaks Unbounded in Turbopack */
+  --font-display: var(--font-unbounded);
 }
 
 * {

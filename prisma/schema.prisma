@@ -54,6 +54,8 @@ model User {
   chatMessages        ChatMessage[]            @relation("ChatSender")
   newsPosts           NewsPost[]
   notifications       Notification[]
+  lessonProgress      LessonProgress[]
+  assessmentAttempts  AssessmentAttempt[]
 }
 
 // ─── Catalog (minimal for AZ scope) ─────────────────────────
@@ -97,26 +99,86 @@ model Module {
   assignments Assignment[]
   quizzes     Quiz[]
   rewardRules AzRewardRule[]
+  assessment  ModuleAssessment?
 
   @@unique([courseId, slug])
   @@index([courseId, position])
 }
 
 model Lesson {
-  id          String        @id @default(cuid())
-  moduleId    String
-  slug        String
-  title       String
-  position    Int
-  status      ContentStatus @default(DRAFT)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id               String        @id @default(cuid())
+  moduleId         String
+  slug             String
+  title            String
+  position         Int
+  status           ContentStatus @default(DRAFT)
+  /// Estimated time to complete, minutes
+  estimatedMinutes Int?
+  /// Typed lesson blocks (Zod-validated JSON array)
+  content          Json?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 
-  module      Module         @relation(fields: [moduleId], references: [id])
+  module      Module          @relation(fields: [moduleId], references: [id])
   rewardRules AzRewardRule[]
+  progress    LessonProgress[]
 
   @@unique([moduleId, slug])
   @@index([moduleId, position])
+}
+
+enum LessonProgressStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+model LessonProgress {
+  id          String               @id @default(cuid())
+  userId      String
+  lessonId    String
+  status      LessonProgressStatus @default(IN_PROGRESS)
+  /// Interactive checkpoint state (knowledge checks, pickers, etc.)
+  checkpoint  Json?
+  completedAt DateTime?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id])
+  lesson Lesson @relation(fields: [lessonId], references: [id])
+
+  @@unique([userId, lessonId])
+  @@index([userId, status])
+}
+
+model ModuleAssessment {
+  id        String   @id @default(cuid())
+  moduleId  String   @unique
+  title     String
+  /// Minimum score (0–100) to pass auto-graded part
+  passScore Int      @default(70)
+  /// Typed assessment questions (Zod-validated JSON)
+  content   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  module   Module              @relation(fields: [moduleId], references: [id])
+  attempts AssessmentAttempt[]
+}
+
+model AssessmentAttempt {
+  id           String   @id @default(cuid())
+  assessmentId String
+  userId       String
+  score        Int
+  passed       Boolean
+  answers      Json
+  createdAt    DateTime @default(now())
+
+  assessment ModuleAssessment @relation(fields: [assessmentId], references: [id])
+  user       User             @relation(fields: [userId], references: [id])
+
+  @@index([assessmentId, userId])
+  @@index([userId, createdAt])
 }
 
 model Quiz {
