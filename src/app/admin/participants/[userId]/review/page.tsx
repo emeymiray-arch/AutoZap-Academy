@@ -40,11 +40,28 @@ export default async function ParticipantReviewPage({ params }: Props) {
     take: 10,
   });
 
+  const lessonProgress = await prisma.lessonProgress.findMany({
+    where: { userId, status: "COMPLETED", completionCount: { gt: 0 } },
+    include: {
+      lesson: {
+        select: {
+          title: true,
+          position: true,
+          module: { select: { title: true, position: true, slug: true } },
+        },
+      },
+    },
+    orderBy: [{ lastCompletedAt: "desc" }, { completedAt: "desc" }],
+  });
+
   return (
     <AppShell user={admin} title={`Ответы · ${displayName(student)}`}>
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap gap-3">
         <Link href="/admin/participants" className="text-sm font-black text-[var(--muted)] hover:text-[var(--text)]">
           ← Участники
+        </Link>
+        <Link href="/admin/progress" className="text-sm font-semibold text-[var(--cyan)] hover:underline">
+          Все прохождения →
         </Link>
       </div>
 
@@ -110,6 +127,34 @@ export default async function ParticipantReviewPage({ params }: Props) {
           })}
         </div>
       )}
+
+      <section className="mt-10">
+        <h2 className="mb-3 text-sm font-black uppercase tracking-wider text-[var(--muted)]">
+          Прохождения уроков
+        </h2>
+        {lessonProgress.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-[var(--line-strong)] px-3 py-4 text-sm font-bold text-[var(--muted)]">
+            Пока нет завершённых уроков.
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {lessonProgress.map((p) => (
+              <li
+                key={p.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] px-3 py-2.5 text-sm font-bold"
+              >
+                <span className="text-[var(--text)]">
+                  М{p.lesson.module.position}.{p.lesson.position} · {p.lesson.title}
+                </span>
+                <span className="tabular-nums text-[var(--cyan)]">{p.completionCount}×</span>
+                <span className="w-full text-xs text-[var(--muted)] sm:w-auto sm:text-right">
+                  {(p.lastCompletedAt ?? p.completedAt)?.toLocaleString("ru-RU") ?? "—"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       {attempts.length > 0 ? (
         <section className="mt-10">

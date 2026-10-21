@@ -140,7 +140,10 @@ model LessonProgress {
   status      LessonProgressStatus @default(IN_PROGRESS)
   /// Interactive checkpoint state (knowledge checks, pickers, etc.)
   checkpoint  Json?
-  completedAt DateTime?
+  /// How many times the student finished this lesson (Завершить / Пройти ещё раз).
+  completionCount Int              @default(0)
+  completedAt     DateTime?
+  lastCompletedAt DateTime?
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
 
@@ -149,6 +152,7 @@ model LessonProgress {
 
   @@unique([userId, lessonId])
   @@index([userId, status])
+  @@index([lessonId, completionCount])
 }
 
 model ModuleAssessment {

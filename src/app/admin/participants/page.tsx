@@ -37,6 +37,14 @@ export default async function AdminParticipantsPage() {
 
   return (
     <AppShell user={admin} title="Участники">
+      <div className="mb-4">
+        <Link
+          href="/admin/progress"
+          className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--cyan)] hover:underline"
+        >
+          Прохождения уроков →
+        </Link>
+      </div>
       <div className="grid gap-5 lg:grid-cols-[1fr_1.2fr]">
         <section>
           <h2 className="mb-3 text-base font-bold">Создать участника</h2>

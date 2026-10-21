@@ -143,6 +143,7 @@ export async function completeLessonAction(input: z.infer<typeof completeSchema>
   const existing = await prisma.lessonProgress.findUnique({
     where: { userId_lessonId: { userId: user.id, lessonId: lesson.id } },
   });
+  const now = new Date();
 
   await prisma.lessonProgress.upsert({
     where: { userId_lessonId: { userId: user.id, lessonId: lesson.id } },
@@ -151,12 +152,16 @@ export async function completeLessonAction(input: z.infer<typeof completeSchema>
       lessonId: lesson.id,
       status: "COMPLETED",
       checkpoint: asJson(checkpoint),
-      completedAt: new Date(),
+      completionCount: 1,
+      completedAt: now,
+      lastCompletedAt: now,
     },
     update: {
       status: "COMPLETED",
       checkpoint: asJson(checkpoint),
-      completedAt: existing?.completedAt ?? new Date(),
+      completionCount: { increment: 1 },
+      completedAt: existing?.completedAt ?? now,
+      lastCompletedAt: now,
     },
   });
 

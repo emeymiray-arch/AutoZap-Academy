@@ -82,6 +82,7 @@ export default async function LessonPage({ params }: Props) {
         content={lesson.content}
         initialCheckpoint={(progress?.checkpoint as CheckpointState) ?? {}}
         completed={progress?.status === "COMPLETED"}
+        completionCount={progress?.completionCount ?? 0}
         prevSlug={prev?.slug ?? null}
         nextSlug={next?.slug ?? null}
         nextIsAssessment={!next && Boolean(lesson.module.assessment)}

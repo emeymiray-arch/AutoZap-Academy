@@ -14,6 +14,7 @@ import {
   PanelLeftOpen,
   LogOut,
   Users,
+  ChartColumn,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Role } from "@prisma/client";
@@ -47,6 +48,7 @@ const nav: NavItem[] = [
   { href: "/leaderboard", label: "Рейтинг", short: "Топ", icon: Trophy },
   { href: "/profile", label: "Профиль", short: "Я", icon: UserRound },
   { href: "/admin/participants", label: "Участники", short: "Люди", icon: Users, adminOnly: true },
+  { href: "/admin/progress", label: "Прохождения", short: "Уроки", icon: ChartColumn, adminOnly: true },
 ];
 
 export function AppShell({

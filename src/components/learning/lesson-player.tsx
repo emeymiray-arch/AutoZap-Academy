@@ -39,6 +39,7 @@ type Props = {
   content: unknown;
   initialCheckpoint: CheckpointState;
   completed: boolean;
+  completionCount?: number;
   prevSlug: string | null;
   nextSlug: string | null;
   nextIsAssessment: boolean;
@@ -69,6 +70,7 @@ export function LessonPlayer(props: Props) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [done, setDone] = useState(props.completed);
+  const [timesCompleted, setTimesCompleted] = useState(props.completionCount ?? (props.completed ? 1 : 0));
   const [mounted, setMounted] = useState(false);
   const [tocOpen, setTocOpen] = useState(false);
   const [textScale, setTextScale] = useState<"md" | "lg">("md");
@@ -116,9 +118,10 @@ export function LessonPlayer(props: Props) {
     });
   }
 
-  function handleComplete() {
+  function handleComplete(opts?: { advance?: boolean }) {
     setError(null);
     if (saveTimer.current) clearTimeout(saveTimer.current);
+    const advance = opts?.advance ?? !done;
     startTransition(async () => {
       try {
         await completeLessonAction({
@@ -127,10 +130,13 @@ export function LessonPlayer(props: Props) {
           checkpoint,
         });
         setDone(true);
-        if (props.nextSlug) {
-          router.push(`/academy/${props.moduleSlug}/${props.nextSlug}`);
-        } else if (props.nextIsAssessment) {
-          router.push(`/academy/${props.moduleSlug}/assessment`);
+        setTimesCompleted((n) => n + 1);
+        if (advance) {
+          if (props.nextSlug) {
+            router.push(`/academy/${props.moduleSlug}/${props.nextSlug}`);
+          } else if (props.nextIsAssessment) {
+            router.push(`/academy/${props.moduleSlug}/assessment`);
+          }
         }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Не удалось завершить урок");
@@ -159,12 +165,22 @@ export function LessonPlayer(props: Props) {
           </Link>
         )}
 
-        <div className="flex items-center gap-2">
-          {!done ? (
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {done ? (
             <button
               type="button"
               disabled={!canComplete || pending}
-              onClick={handleComplete}
+              onClick={() => handleComplete({ advance: false })}
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cyan)] disabled:opacity-50"
+            >
+              {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              {pending ? "Сохраняем…" : "Пройти ещё раз"}
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={!canComplete || pending}
+              onClick={() => handleComplete({ advance: true })}
               className={cn(
                 "inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--cyan)]",
                 canComplete && !pending
@@ -175,7 +191,7 @@ export function LessonPlayer(props: Props) {
               {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               {pending ? "Сохраняем…" : "Завершить урок"}
             </button>
-          ) : null}
+          )}
           {done && props.nextSlug ? (
             <Link
               href={`/academy/${props.moduleSlug}/${props.nextSlug}`}
@@ -249,7 +265,8 @@ export function LessonPlayer(props: Props) {
         ) : null}
         {done ? (
           <span className="inline-flex items-center gap-1 font-medium text-emerald-700">
-            <Check className="h-3.5 w-3.5" /> Завершён
+            <Check className="h-3.5 w-3.5" />
+            {timesCompleted > 1 ? `Пройден ${timesCompleted}×` : "Завершён"}
           </span>
         ) : null}
         <div className="ml-auto flex items-center gap-2">
