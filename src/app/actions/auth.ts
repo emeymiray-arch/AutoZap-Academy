@@ -238,26 +238,28 @@ export async function setParticipantPasswordAction(
   _prev: AuthState,
   formData: FormData,
 ): Promise<AuthState> {
-  const admin = await requireAdmin();
   const userId = String(formData.get("userId") ?? "");
   const parsed = adminPasswordSchema.safeParse(String(formData.get("password") ?? "").trim());
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Некорректный пароль" };
+
+  const admin = await requireAdmin();
   if (!userId || userId === admin.id) return { error: "Нельзя изменить этот аккаунт" };
 
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
-  if (!user || user.role !== "STUDENT") return { error: "Участник не найден" };
+  // Hash before the DB round-trip so Neon wait and CPU work overlap less with UI pending state.
+  const passwordHash = hashPassword(parsed.data);
 
-  await prisma.user.update({
-    where: { id: userId },
+  const updated = await prisma.user.updateMany({
+    where: { id: userId, role: "STUDENT" },
     data: {
-      passwordHash: hashPassword(parsed.data),
+      passwordHash,
       mustChangePassword: false,
       // Signs the participant out everywhere so the old password stops working immediately.
       sessionVersion: { increment: 1 },
     },
   });
+  if (updated.count === 0) return { error: "Участник не найден" };
 
-  revalidatePath("/admin/participants");
+  // No revalidatePath: the list UI does not show passwords, and a full page refresh felt slow.
   return { ok: true, tempPassword: parsed.data };
 }
 
