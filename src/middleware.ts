@@ -15,6 +15,8 @@ export async function middleware(request: NextRequest) {
     pathname === "/login" ||
     pathname === "/privacy" ||
     pathname === "/certificate" ||
+    pathname === "/manifest.webmanifest" ||
+    pathname === "/manifest.webmanifest/" ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/brand") ||
     pathname.startsWith("/bg") ||
@@ -45,5 +47,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|brand|bg|favicon.ico).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|brand|bg|favicon.ico|manifest\\.webmanifest).*)"],
 };
