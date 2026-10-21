@@ -3,6 +3,7 @@ import { NewsComposeForm } from "@/components/news/news-compose-form";
 import { NewsCard } from "@/components/news/news-card";
 import { requireUser } from "@server/auth/session";
 import { prisma } from "@server/db";
+import { markNewsRead } from "@/lib/news-reads";
 import { displayName } from "@/lib/user";
 import Link from "next/link";
 
@@ -12,10 +13,20 @@ export default async function NewsPage() {
   const user = await requireUser();
   const isAdmin = user.role === "ADMIN";
 
-  const news = await prisma.newsPost.findMany({
+  const newsIds = await prisma.newsPost.findMany({
     orderBy: { createdAt: "desc" },
     take: 50,
-    include: { author: { select: { name: true, nickname: true } } },
+    select: { id: true, authorId: true },
+  });
+  await markNewsRead(user.id, newsIds);
+
+  const news = await prisma.newsPost.findMany({
+    where: { id: { in: newsIds.map((n) => n.id) } },
+    orderBy: { createdAt: "desc" },
+    include: {
+      author: { select: { name: true, nickname: true } },
+      _count: { select: { reads: true } },
+    },
   });
 
   return (
@@ -34,6 +45,7 @@ export default async function NewsPage() {
               title={item.title}
               body={item.body}
               meta={`${displayName(item.author)} · ${item.createdAt.toLocaleString("ru-RU")}`}
+              readCount={isAdmin ? item._count.reads : undefined}
               canDelete={isAdmin}
             />
           </li>

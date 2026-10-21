@@ -53,6 +53,7 @@ model User {
   chatParticipants    ChatParticipant[]
   chatMessages        ChatMessage[]            @relation("ChatSender")
   newsPosts           NewsPost[]
+  newsReads           NewsPostRead[]
   notifications       Notification[]
   lessonProgress      LessonProgress[]
   assessmentAttempts  AssessmentAttempt[]
@@ -576,9 +577,25 @@ model NewsPost {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  reads  NewsPostRead[]
 
   @@index([createdAt])
+}
+
+/// Unique readers per news post (one row per user who opened the news feed).
+model NewsPostRead {
+  id         String   @id @default(cuid())
+  newsPostId String
+  userId     String
+  readAt     DateTime @default(now())
+
+  newsPost NewsPost @relation(fields: [newsPostId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([newsPostId, userId])
+  @@index([newsPostId])
+  @@index([userId])
 }
 
 model Notification {

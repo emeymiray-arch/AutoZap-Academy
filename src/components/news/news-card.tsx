@@ -1,10 +1,12 @@
 import { deleteNewsAction } from "@/app/actions/social";
+import { formatReadCount } from "@/lib/news-reads";
 
 export function NewsCard({
   id,
   title,
   body,
   meta,
+  readCount,
   canDelete = false,
   compact = false,
 }: {
@@ -12,6 +14,8 @@ export function NewsCard({
   title: string;
   body: string;
   meta?: string;
+  /** Unique readers; shown to admins. */
+  readCount?: number;
   canDelete?: boolean;
   compact?: boolean;
 }) {
@@ -30,7 +34,15 @@ export function NewsCard({
           >
             {body}
           </p>
-          {meta ? <p className="mt-2 text-[0.7rem] font-semibold text-black/50">{meta}</p> : null}
+          {meta || readCount != null ? (
+            <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[0.7rem] font-semibold text-black/50">
+              {meta ? <span>{meta}</span> : null}
+              {meta && readCount != null ? <span aria-hidden>·</span> : null}
+              {readCount != null ? (
+                <span className="tabular-nums text-sky-700">{formatReadCount(readCount)}</span>
+              ) : null}
+            </p>
+          ) : null}
         </div>
         {canDelete ? (
           <form action={deleteNewsAction} className="shrink-0">

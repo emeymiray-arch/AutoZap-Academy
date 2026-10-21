@@ -9,6 +9,7 @@ import { requireUser } from "@server/auth/session";
 import { prisma } from "@server/db";
 import { createAZService } from "@server/az/az-service";
 import { formatAz } from "@/lib/utils";
+import { markNewsRead } from "@/lib/news-reads";
 import { displayName, initials } from "@/lib/user";
 import { Award, BookOpen, Newspaper, Sparkles, Users } from "lucide-react";
 
@@ -75,9 +76,14 @@ export default async function DashboardPage() {
     prisma.newsPost.findMany({
       orderBy: { createdAt: "desc" },
       take: 5,
-      include: { author: { select: { name: true, nickname: true } } },
+      include: {
+        author: { select: { name: true, nickname: true } },
+        _count: { select: { reads: true } },
+      },
     }),
   ]);
+
+  await markNewsRead(user.id, news);
 
   const summary = studentData?.summary;
 
@@ -121,6 +127,7 @@ export default async function DashboardPage() {
                 id={item.id}
                 title={item.title}
                 body={item.body}
+                readCount={isAdmin ? item._count.reads : undefined}
                 canDelete={isAdmin}
                 compact
               />
