@@ -349,6 +349,34 @@ function Bead({ cx, cy }: { cx: number; cy: number }) {
   );
 }
 
+/** Small flower between chain beads on the geometric frame. */
+function Bloom({
+  cx,
+  cy,
+  n = 4,
+  len = 6.5,
+  wid = 2.1,
+  width = 1.15,
+  dot = 1.1,
+}: {
+  cx: number;
+  cy: number;
+  n?: number;
+  len?: number;
+  wid?: number;
+  width?: number;
+  dot?: number;
+}) {
+  return (
+    <g {...pen} strokeWidth={width}>
+      {Array.from({ length: n }, (_, i) => (
+        <path key={i} d={petalPath(cx, cy, (i * Math.PI * 2) / n + Math.PI / n, len, wid)} />
+      ))}
+      <circle cx={cx} cy={cy} r={dot} fill="currentColor" stroke="none" />
+    </g>
+  );
+}
+
 function GeometricFrame({ color }: { color: string }) {
   const edge = 58;
   const r = 11;

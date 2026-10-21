@@ -55,8 +55,8 @@ function Avatar({ user, size = 28 }: { user: Author; size?: number }) {
   const label = displayName(user);
   const cls = `rounded-full object-cover`;
   if (user.avatarUrl) {
-    // eslint-disable-next-line @next/next/no-img-element
     return (
+      // eslint-disable-next-line @next/next/no-img-element -- remote avatars; next/image needs a loader
       <img
         src={user.avatarUrl}
         alt=""
