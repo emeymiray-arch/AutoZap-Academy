@@ -11,22 +11,22 @@ const VARIANTS: Array<{ id: CertificateVariant; label: string; blurb: string }> 
   {
     id: "parchment",
     label: "Parchment",
-    blurb: "Cream paper, script title, corner filigree, red wax seal.",
+    blurb: "Ink corner scrolls and a drawn double rule, like a pen ornament.",
   },
   {
     id: "achievement",
     label: "Achievement",
-    blurb: "Clean serif title, wax seal on top, grey ornaments.",
+    blurb: "Fine filigree on all four edges, with center and side scrolls.",
   },
   {
     id: "goldline",
     label: "Gold Line",
-    blurb: "Gold double frame, serif heading, AutoZap seal.",
+    blurb: "Gold floral border drawn as a vine, not a flat pattern.",
   },
   {
     id: "navy",
     label: "Navy",
-    blurb: "Dark navy field with gold ornaments.",
+    blurb: "Engraved gold chain of rings and flowers on navy.",
   },
 ];
 

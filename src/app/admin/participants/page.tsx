@@ -1,5 +1,6 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { CreateParticipantForm } from "@/components/admin/create-participant-form";
+import { ParticipantPasswordControl } from "@/components/admin/participant-password-control";
 import { requireAdmin } from "@server/auth/session";
 import { prisma } from "@server/db";
 import { formatAz } from "@/lib/utils";
@@ -120,6 +121,7 @@ export default async function AdminParticipantsPage() {
                         >
                           Профиль
                         </Link>
+                        <ParticipantPasswordControl userId={s.id} name={displayName(s)} />
                         {archived ? (
                           <span className="ml-1 az-badge az-badge-muted">архив</span>
                         ) : null}

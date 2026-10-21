@@ -43,7 +43,7 @@ export default function CertificatePreviewPage() {
           AutoZap Specialist Certificate
         </h1>
         <p className="mt-2 text-sm text-white/65">
-          Compact English layouts · four styles · switch tabs to compare
+          Four drawn frames · line ornaments, not flat graphics
         </p>
       </div>
       <CertificatePreview />

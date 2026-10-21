@@ -18,6 +18,8 @@ import { sanitizeAvatarUrl } from "@/lib/sanitize";
 
 export type AuthState = { error?: string; ok?: boolean; tempPassword?: string };
 
+const adminPasswordSchema = z.string().min(6, "Минимум 6 символов").max(72, "Максимум 72 символа");
+
 export async function loginAction(_prev: AuthState, formData: FormData): Promise<AuthState> {
   const email = String(formData.get("email") ?? "")
     .trim()
@@ -177,6 +179,7 @@ const createParticipantSchema = z.object({
   name: z.string().trim().min(2).max(80),
   email: z.string().trim().email(),
   about: z.string().trim().max(500).optional(),
+  password: adminPasswordSchema.optional(),
 });
 
 export async function createParticipantAction(
@@ -185,17 +188,25 @@ export async function createParticipantAction(
 ): Promise<AuthState> {
   await requireAdmin();
 
-  try {
-    const parsed = createParticipantSchema.parse({
-      name: formData.get("name"),
-      email: formData.get("email"),
-      about: formData.get("about") || undefined,
-    });
+  const result = createParticipantSchema.safeParse({
+    name: formData.get("name"),
+    email: formData.get("email"),
+    about: formData.get("about") || undefined,
+    password: String(formData.get("password") ?? "").trim() || undefined,
+  });
+  if (!result.success) {
+    const passwordIssue = result.error.issues.find((i) => i.path[0] === "password");
+    return { error: passwordIssue?.message ?? "Проверьте имя и email" };
+  }
+  const parsed = result.data;
 
+  try {
     const existing = await prisma.user.findUnique({ where: { email: parsed.email.toLowerCase() } });
     if (existing) return { error: "Участник с таким email уже существует" };
 
-    const tempPassword = generateTempPassword();
+    // A password chosen by the admin is final; a generated one must be replaced at first login.
+    const adminChosen = Boolean(parsed.password);
+    const tempPassword = parsed.password ?? generateTempPassword();
 
     const user = await prisma.user.create({
       data: {
@@ -204,7 +215,7 @@ export async function createParticipantAction(
         about: parsed.about ?? null,
         role: "STUDENT",
         passwordHash: hashPassword(tempPassword),
-        mustChangePassword: true,
+        mustChangePassword: !adminChosen,
       },
     });
 
@@ -221,6 +232,33 @@ export async function createParticipantAction(
   } catch {
     return { error: "Не удалось создать участника" };
   }
+}
+
+export async function setParticipantPasswordAction(
+  _prev: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const admin = await requireAdmin();
+  const userId = String(formData.get("userId") ?? "");
+  const parsed = adminPasswordSchema.safeParse(String(formData.get("password") ?? "").trim());
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Некорректный пароль" };
+  if (!userId || userId === admin.id) return { error: "Нельзя изменить этот аккаунт" };
+
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
+  if (!user || user.role !== "STUDENT") return { error: "Участник не найден" };
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      passwordHash: hashPassword(parsed.data),
+      mustChangePassword: false,
+      // Signs the participant out everywhere so the old password stops working immediately.
+      sessionVersion: { increment: 1 },
+    },
+  });
+
+  revalidatePath("/admin/participants");
+  return { ok: true, tempPassword: parsed.data };
 }
 
 export async function archiveParticipantAction(formData: FormData) {

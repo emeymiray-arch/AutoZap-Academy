@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
+import { CertificateFrame, type FrameKind } from "@/components/certificate/certificate-frames";
 import { cn } from "@/lib/utils";
 
 export type CertificateVariant = "parchment" | "achievement" | "goldline" | "navy";
@@ -33,64 +34,6 @@ function Logo({ size = 40 }: { size?: number }) {
         />
       </div>
     </div>
-  );
-}
-
-/** Thin double rule + corner filigree + mid-edge swashes (reference style) */
-function Frame({ color = "#2a2a2a" }: { color?: string }) {
-  return (
-    <svg
-      className="pointer-events-none absolute inset-[2.8%] h-[94.4%] w-[94.4%]"
-      viewBox="0 0 1000 700"
-      preserveAspectRatio="none"
-      aria-hidden
-    >
-      <defs>
-        <g id="c-corner" fill="none" stroke={color} strokeLinecap="round" strokeLinejoin="round">
-          <path
-            d="M6 58 C6 34 8 24 20 18 C34 10 48 16 52 28 C56 40 46 48 36 46 C28 44 26 36 32 32 C40 26 54 30 60 40 C70 56 88 46 82 28 C76 12 56 6 40 12 C22 20 12 36 8 52"
-            strokeWidth="1.4"
-          />
-          <path
-            d="M58 8 C72 6 88 12 86 26 C84 38 70 40 64 30 C60 24 68 18 76 20"
-            strokeWidth="1.15"
-          />
-          <path
-            d="M8 58 C6 72 12 88 26 86 C38 84 40 70 30 64 C24 60 18 68 20 76"
-            strokeWidth="1.15"
-          />
-          <circle cx="36" cy="34" r="1.5" fill={color} stroke="none" />
-        </g>
-        <g id="c-mid" fill="none" stroke={color} strokeLinecap="round">
-          <path d="M0 8 C14 8 20 2 30 2 C40 2 46 8 56 8 C66 8 72 2 82 2 C92 2 98 8 112 8" strokeWidth="1.2" />
-          <path d="M48 8 C52 2 60 2 64 8 M48 8 C52 14 60 14 64 8" strokeWidth="1" />
-          <circle cx="56" cy="8" r="1.5" fill={color} stroke="none" />
-        </g>
-      </defs>
-
-      <rect x="20" y="20" width="960" height="660" fill="none" stroke={color} strokeWidth="1.6" />
-      <rect x="26" y="26" width="948" height="648" fill="none" stroke={color} strokeWidth="0.7" opacity="0.55" />
-
-      <g transform="translate(18,18)">
-        <use href="#c-corner" />
-      </g>
-      <g transform="translate(982,18) rotate(90)">
-        <use href="#c-corner" />
-      </g>
-      <g transform="translate(18,682) rotate(-90)">
-        <use href="#c-corner" />
-      </g>
-      <g transform="translate(982,682) rotate(180)">
-        <use href="#c-corner" />
-      </g>
-
-      <g transform="translate(444,12)">
-        <use href="#c-mid" />
-      </g>
-      <g transform="translate(444,680) scale(1,-1)">
-        <use href="#c-mid" />
-      </g>
-    </svg>
   );
 }
 
@@ -169,30 +112,41 @@ function Shell({
   children,
   className,
   frameColor,
+  frame,
+  pad = "px-[9%] pb-[8%] pt-[7%]",
 }: {
   children: ReactNode;
   className?: string;
-  frameColor?: string;
+  frameColor: string;
+  frame: FrameKind;
+  pad?: string;
 }) {
   return (
-    <article
-      className={cn(
-        "az-cert relative mx-auto aspect-[1.414/1] w-full max-w-[820px] overflow-hidden rounded-sm shadow-[0_18px_48px_rgba(10,22,40,0.28)]",
-        className,
-      )}
-      aria-label="AutoZap Specialist Certificate"
-    >
-      <Frame color={frameColor} />
-      <div className="relative flex h-full flex-col items-center px-[7%] py-[5.5%] text-center">
-        {children}
+    <div className="mx-auto w-full max-w-[880px] [container-type:inline-size]">
+      <div className="relative h-[calc(100cqi*1000/1414)]">
+        <article
+          className={cn(
+            "az-cert absolute top-0 left-0 h-[calc(880px*1000/1414)] w-[880px] origin-top-left overflow-hidden rounded-sm shadow-[0_18px_48px_rgba(10,22,40,0.28)] [transform:scale(calc(100cqi/880px))]",
+            className,
+          )}
+          aria-label="AutoZap Specialist Certificate"
+        >
+          <CertificateFrame kind={frame} color={frameColor} />
+          <div className={cn("relative flex h-full flex-col items-center text-center", pad)}>{children}</div>
+        </article>
       </div>
-    </article>
+    </div>
   );
 }
 
 function ParchmentCertificate(props: Required<Omit<SpecialistCertificateProps, "variant">>) {
   return (
-    <Shell className="bg-[#f4efe4] text-[#1a1a1a]" frameColor="#2c2c2c">
+    <Shell
+      className="bg-[#f4efe4] text-[#1a1a1a]"
+      frameColor="#2a241c"
+      frame="scroll"
+      pad="px-[12%] pb-[12%] pt-[13%]"
+    >
       <Logo size={36} />
       <p
         className="mt-1.5 text-[0.58rem] font-semibold uppercase tracking-[0.24em] text-[#444]"
@@ -257,7 +211,7 @@ function ParchmentCertificate(props: Required<Omit<SpecialistCertificateProps, "
 
 function AchievementCertificate(props: Required<Omit<SpecialistCertificateProps, "variant">>) {
   return (
-    <Shell className="bg-[#f7f7f4] text-[#111]" frameColor="#6b7280">
+    <Shell className="bg-[#f7f6f2] text-[#111]" frameColor="#3e4650" frame="filigree" pad="px-[11%] pb-[10%] pt-[12%]">
       <WaxSeal letter="A" />
       <h1
         className="mt-2 text-[1.05rem] font-bold uppercase tracking-[0.12em] text-[#0b2a4a] md:text-[1.35rem]"
@@ -300,7 +254,12 @@ function AchievementCertificate(props: Required<Omit<SpecialistCertificateProps,
 
 function GoldlineCertificate(props: Required<Omit<SpecialistCertificateProps, "variant">>) {
   return (
-    <Shell className="bg-[#f6f1e6] text-[#151515]" frameColor="#b8962e">
+    <Shell
+      className="bg-[#f7f1e4] text-[#151515]"
+      frameColor="#7a5c22"
+      frame="lace"
+      pad="px-[13%] pb-[13%] pt-[12%]"
+    >
       <Swash className="text-[#b8962e]" />
       <h1
         className="mt-1 text-[1.15rem] font-bold uppercase tracking-[0.14em] md:text-[1.45rem]"
@@ -358,8 +317,10 @@ function GoldlineCertificate(props: Required<Omit<SpecialistCertificateProps, "v
 function NavyCertificate(props: Required<Omit<SpecialistCertificateProps, "variant">>) {
   return (
     <Shell
-      className="bg-[radial-gradient(ellipse_at_center,#15325a_0%,#07111f_70%)] text-white"
-      frameColor="#c9a227"
+      className="bg-[radial-gradient(ellipse_at_center,#16345c_0%,#07111f_72%)] text-white"
+      frameColor="#e4c56a"
+      frame="geometric"
+      pad="px-[11%] pb-[10%] pt-[8.5%]"
     >
       <Logo size={36} />
       <p
