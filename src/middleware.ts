@@ -33,7 +33,9 @@ export async function middleware(request: NextRequest) {
 
   if (!authed && !isPublic) {
     const url = request.nextUrl.clone();
+    // Always send guests to the public login page — never leave them on /admin/...
     url.pathname = "/login";
+    url.search = "";
     return withCleanup(NextResponse.redirect(url));
   }
 

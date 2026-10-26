@@ -62,7 +62,8 @@ export async function loginAction(_prev: AuthState, formData: FormData): Promise
 
   if (!user.consentAcceptedAt) redirect("/consent");
   if (user.mustChangePassword) redirect("/onboarding");
-  redirect(user.role === "ADMIN" ? "/admin/participants" : "/dashboard");
+  // Dashboard for everyone so the address bar is safe to copy/share (not /admin/...).
+  redirect("/dashboard");
 }
 
 export async function logoutAction() {
@@ -77,7 +78,7 @@ export async function acceptConsentAction() {
     data: { consentAcceptedAt: new Date() },
   });
   if (user.mustChangePassword) redirect("/onboarding");
-  redirect(user.role === "ADMIN" ? "/admin/participants" : "/dashboard");
+  redirect("/dashboard");
 }
 
 const onboardingSchema = z.object({

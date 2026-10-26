@@ -20,10 +20,26 @@ const body = Source_Sans_3({
 const PAPER = "#f4f7fb";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://autozap-academy.vercel.app"),
   title: "AutoZap Academy",
-  description: "Корпоративная обучающая платформа AutoZap",
+  description: "Корпоративная обучающая платформа AutoZap — вход для участников",
   applicationName: "AutoZap Academy",
   manifest: "/manifest.webmanifest",
+  openGraph: {
+    type: "website",
+    locale: "ru_RU",
+    url: "https://autozap-academy.vercel.app/login",
+    siteName: "AutoZap Academy",
+    title: "AutoZap Academy",
+    description: "Корпоративная обучающая платформа AutoZap — вход для участников",
+    images: [{ url: "/brand/pwa/icon-512.png", width: 512, height: 512, alt: "AutoZap Academy" }],
+  },
+  twitter: {
+    card: "summary",
+    title: "AutoZap Academy",
+    description: "Корпоративная обучающая платформа AutoZap — вход для участников",
+    images: ["/brand/pwa/icon-512.png"],
+  },
   icons: {
     icon: [
       { url: "/brand/favicon.png", sizes: "128x128", type: "image/png" },
