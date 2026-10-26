@@ -82,7 +82,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
           select: sessionSelect,
         }),
       ),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), 12_000)),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 6_000)),
     ]);
     if (!user) return null;
     if (user.sessionVersion !== payload.v) return null;

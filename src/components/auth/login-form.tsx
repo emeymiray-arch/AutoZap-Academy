@@ -1,16 +1,26 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
-import { loginAction, type AuthState } from "@/app/actions/auth";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { BrandMark } from "@/components/brand/logo";
 import Link from "next/link";
 
-const initial: AuthState = {};
+const ERRORS: Record<string, string> = {
+  empty: "Введите email и пароль",
+  auth: "Неверный email или пароль",
+  rate: "Слишком много попыток. Подождите немного.",
+  db: "Сервер базы данных просыпается. Подождите 10–20 сек и попробуйте снова.",
+  arch: "Аккаунт отключён. Обратитесь к администратору.",
+  cfg: "Сервер не настроен. Попробуйте позже.",
+  form: "Не удалось отправить форму. Обновите страницу.",
+};
 
 export default function LoginForm() {
-  const [state, action, pending] = useActionState(loginAction, initial);
+  const params = useSearchParams();
+  const error = ERRORS[params.get("e") ?? ""] ?? null;
+  const [pending, setPending] = useState(false);
 
-  // Warm Neon + the US serverless isolate while the user types credentials.
+  // Warm Neon while the user types — classic POST login does not need React to succeed.
   useEffect(() => {
     const ctrl = new AbortController();
     void fetch("/api/health", { signal: ctrl.signal, cache: "no-store" }).catch(() => {});
@@ -34,7 +44,12 @@ export default function LoginForm() {
         </div>
       </div>
 
-      <form action={action} className="space-y-3">
+      <form
+        action="/api/login"
+        method="post"
+        className="space-y-3"
+        onSubmit={() => setPending(true)}
+      >
         <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
           Email
           <input
@@ -58,9 +73,9 @@ export default function LoginForm() {
           />
         </label>
 
-        {state.error ? (
-          <p className="rounded-xl border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
-            {state.error}
+        {error ? (
+          <p className="rounded-xl border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-700">
+            {error}
           </p>
         ) : null}
 

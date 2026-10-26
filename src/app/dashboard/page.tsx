@@ -4,32 +4,76 @@ import { AzSpeedStats } from "@/components/az/az-speed-stats";
 import { MedalEmptySlot, MedalTierBlock, type MedalTier } from "@/components/az/rank-medal";
 import { NewsComposeForm } from "@/components/news/news-compose-form";
 import { NewsCard } from "@/components/news/news-card";
-import { loadStudentAzDashboard } from "@server/az/queries";
 import { requireUser } from "@server/auth/session";
 import { prisma } from "@server/db";
-import { createAZService } from "@server/az/az-service";
 import { formatAz } from "@/lib/utils";
 import { markNewsRead } from "@/lib/news-reads";
 import { displayName, initials } from "@/lib/user";
 import { Award, BookOpen, Newspaper, Sparkles, Users } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
+
+/** Fast leaderboard for the home widget — balance only, no ledger N+1. */
+async function loadQuickRanking() {
+  const rows = await prisma.userAzBalance.findMany({
+    where: { user: { role: "STUDENT" } },
+    orderBy: { balance: "desc" },
+    take: 9,
+    include: { user: { select: { id: true, name: true } } },
+  });
+  return rows.map((r, i) => ({
+    rank: i + 1,
+    userId: r.userId,
+    name: r.user.name,
+    totalAz: r.balance,
+  }));
+}
+
+async function loadQuickStudentSummary(userId: string) {
+  const [balanceRow, levels] = await Promise.all([
+    prisma.userAzBalance.findUnique({
+      where: { userId },
+      include: { level: true },
+    }),
+    prisma.azLevelRule.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" } }),
+  ]);
+  if (!balanceRow) return null;
+  const current = balanceRow.level;
+  let progress = 100;
+  if (current) {
+    const idx = levels.findIndex((l) => l.id === current.id);
+    const next = idx >= 0 ? levels[idx + 1] : null;
+    if (next) {
+      const span = Math.max(1, next.minAz - current.minAz);
+      progress = Math.min(100, Math.round((Math.max(0, balanceRow.balance - current.minAz) / span) * 100));
+    }
+  }
+  return {
+    balance: balanceRow.balance,
+    maxAvailableAz: balanceRow.maxAvailableAz,
+    level: current,
+    progressToNextLevelPercent: progress,
+  };
+}
 
 async function getNextLesson(userId: string) {
-  const course = await prisma.course.findFirst({
-    include: {
-      modules: {
-        orderBy: { position: "asc" },
-        include: { lessons: { orderBy: { position: "asc" } } },
+  const [course, done] = await Promise.all([
+    prisma.course.findFirst({
+      include: {
+        modules: {
+          orderBy: { position: "asc" },
+          include: { lessons: { orderBy: { position: "asc" }, select: { id: true, title: true, position: true, status: true } } },
+        },
       },
-    },
-  });
+    }),
+    prisma.azLedgerEntry.findMany({
+      where: { userId, actionType: "LESSON_COMPLETED", kind: { in: ["INITIAL", "REPEAT"] } },
+      select: { sourceId: true },
+    }),
+  ]);
   if (!course) return null;
 
-  const done = await prisma.azLedgerEntry.findMany({
-    where: { userId, actionType: "LESSON_COMPLETED", kind: { in: ["INITIAL", "REPEAT"] } },
-    select: { sourceId: true },
-  });
   const doneIds = new Set(done.map((d) => d.sourceId));
 
   for (const mod of course.modules) {
@@ -62,8 +106,8 @@ export default async function DashboardPage() {
   const user = await requireUser();
   const isAdmin = user.role === "ADMIN";
 
-  const [ranking, activityPosts, nextLesson, studentData, news] = await Promise.all([
-    createAZService(prisma).calculateFinalRanking(),
+  const [ranking, activityPosts, nextLesson, summary, news] = await Promise.all([
+    loadQuickRanking(),
     prisma.activityPost.findMany({
       orderBy: { createdAt: "desc" },
       take: 3,
@@ -72,20 +116,26 @@ export default async function DashboardPage() {
       },
     }),
     isAdmin ? Promise.resolve(null) : getNextLesson(user.id),
-    isAdmin ? Promise.resolve(null) : loadStudentAzDashboard(user.id),
+    isAdmin ? Promise.resolve(null) : loadQuickStudentSummary(user.id),
     prisma.newsPost.findMany({
       orderBy: { createdAt: "desc" },
       take: 5,
-      include: {
+      select: {
+        id: true,
+        title: true,
+        body: true,
+        authorId: true,
         author: { select: { name: true, nickname: true } },
         _count: { select: { reads: true } },
       },
     }),
   ]);
 
-  await markNewsRead(user.id, news);
-
-  const summary = studentData?.summary;
+  // Don't block first paint on read receipts.
+  void markNewsRead(
+    user.id,
+    news.map((n) => ({ id: n.id, authorId: n.authorId })),
+  );
 
   return (
     <AppShell user={user} title={`Привет, ${displayName(user)}`}>
