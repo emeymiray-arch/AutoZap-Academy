@@ -1,9 +1,14 @@
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@server/auth/session";
+import { cookies } from "next/headers";
+import { SESSION_COOKIE } from "@server/auth/session-token";
 
-/** Always land on a shareable area — never bounce guests into /admin/*. */
+/**
+ * Never touch Neon here. Guests and share links must land instantly.
+ * JWT presence is enough to send someone toward the dashboard; requireUser
+ * there will bounce bad sessions to /login without blocking `/`.
+ */
 export default async function HomePage() {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login");
-  redirect("/dashboard");
+  const jar = await cookies();
+  if (jar.get(SESSION_COOKIE)?.value) redirect("/dashboard");
+  redirect("/login");
 }

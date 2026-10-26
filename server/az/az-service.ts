@@ -727,14 +727,15 @@ export class AZService {
   }
 
   async calculateFinalRanking(params?: { graduatedUserIds?: string[] }) {
-    const tieBreaks = await this.db.rankingTieBreakRule.findMany({
-      where: { active: true },
-      orderBy: { priority: "asc" },
-    });
-
-    const balances = await this.db.userAzBalance.findMany({
-      include: { user: true, level: true },
-    });
+    const [tieBreaks, balances] = await Promise.all([
+      this.db.rankingTieBreakRule.findMany({
+        where: { active: true },
+        orderBy: { priority: "asc" },
+      }),
+      this.db.userAzBalance.findMany({
+        include: { user: true, level: true },
+      }),
+    ]);
 
     let candidates = balances.filter((b) => b.user.role === "STUDENT");
     if (params?.graduatedUserIds) {
@@ -742,18 +743,58 @@ export class AZService {
       candidates = candidates.filter((b) => set.has(b.userId));
     }
 
-    const enriched = await Promise.all(
-      candidates.map(async (b) => ({
+    // One ledger pull for everyone — the old per-student N+1 hung dashboards
+    // on cold Neon (white screen + “Загружаем…” for guests after login).
+    const userIds = candidates.map((b) => b.userId);
+    const ledger =
+      userIds.length === 0
+        ? []
+        : await this.db.azLedgerEntry.findMany({
+            where: {
+              userId: { in: userIds },
+              kind: { in: ["INITIAL", "REPEAT", "REGRADE", "RULE_RECALC"] },
+              actionType: {
+                in: [
+                  "LESSON_COMPLETED",
+                  "ASSIGNMENT_REVIEWED",
+                  "QUIZ_COMPLETED",
+                  "SIMULATION_COMPLETED",
+                  "CERTIFICATION",
+                ],
+              },
+            },
+            select: {
+              userId: true,
+              actionType: true,
+              kind: true,
+              sourceType: true,
+              sourceId: true,
+              awardedAz: true,
+              createdAt: true,
+            },
+            orderBy: { createdAt: "desc" },
+          });
+
+    const byUser = new Map<string, typeof ledger>();
+    for (const row of ledger) {
+      const list = byUser.get(row.userId);
+      if (list) list.push(row);
+      else byUser.set(row.userId, [row]);
+    }
+
+    const enriched = candidates.map((b) => {
+      const rows = byUser.get(b.userId) ?? [];
+      return {
         userId: b.userId,
         name: b.user.name,
         totalAz: b.balance,
-        modulesCompleted: await this.countCompletedModules(b.userId),
-        assignmentsAvgAz: await this.avgAwardedForAction(b.userId, "ASSIGNMENT_REVIEWED"),
-        quizAvgAz: await this.avgAwardedForAction(b.userId, "QUIZ_COMPLETED"),
-        simulationAvgAz: await this.avgAwardedForAction(b.userId, "SIMULATION_COMPLETED"),
-        certificationDate: await this.firstAwardDate(b.userId, "CERTIFICATION"),
-      })),
-    );
+        modulesCompleted: this.countCompletedModulesFromRows(rows),
+        assignmentsAvgAz: this.avgAwardedFromRows(rows, "ASSIGNMENT_REVIEWED"),
+        quizAvgAz: this.avgAwardedFromRows(rows, "QUIZ_COMPLETED"),
+        simulationAvgAz: this.avgAwardedFromRows(rows, "SIMULATION_COMPLETED"),
+        certificationDate: this.firstAwardDateFromRows(rows, "CERTIFICATION"),
+      };
+    });
 
     enriched.sort((a, b) => {
       for (const rule of tieBreaks) {
@@ -1007,44 +1048,47 @@ export class AZService {
     return rules.reduce((sum, r) => sum + (r.versions[0]?.maxAz ?? 0), 0);
   }
 
-  private async countCompletedModules(userId: string) {
-    const rows = await this.db.azLedgerEntry.groupBy({
-      by: ["sourceId"],
-      where: {
-        userId,
-        actionType: "LESSON_COMPLETED",
-        kind: { in: ["INITIAL", "REPEAT", "REGRADE", "RULE_RECALC"] },
-      },
-    });
-    return rows.length;
+  private countCompletedModulesFromRows(
+    rows: { actionType: AzActionType; sourceId: string }[],
+  ) {
+    const ids = new Set<string>();
+    for (const r of rows) {
+      if (r.actionType === "LESSON_COMPLETED") ids.add(r.sourceId);
+    }
+    return ids.size;
   }
 
-  private async avgAwardedForAction(userId: string, actionType: AzActionType) {
-    const rows = await this.db.azLedgerEntry.findMany({
-      where: {
-        userId,
-        actionType,
-        kind: { in: ["INITIAL", "REPEAT", "REGRADE", "RULE_RECALC"] },
-        awardedAz: { not: null },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+  private avgAwardedFromRows(
+    rows: {
+      actionType: AzActionType;
+      sourceType: string;
+      sourceId: string;
+      awardedAz: number | null;
+    }[],
+    actionType: AzActionType,
+  ) {
     const latest = new Map<string, number>();
     for (const r of rows) {
+      if (r.actionType !== actionType || r.awardedAz == null) continue;
       const key = `${r.sourceType}:${r.sourceId}`;
-      if (!latest.has(key) && r.awardedAz != null) latest.set(key, r.awardedAz);
+      // rows arrive newest-first
+      if (!latest.has(key)) latest.set(key, r.awardedAz);
     }
     if (latest.size === 0) return 0;
     const values = [...latest.values()];
     return values.reduce((a, b) => a + b, 0) / values.length;
   }
 
-  private async firstAwardDate(userId: string, actionType: AzActionType) {
-    const row = await this.db.azLedgerEntry.findFirst({
-      where: { userId, actionType, kind: "INITIAL" },
-      orderBy: { createdAt: "asc" },
-    });
-    return row?.createdAt ?? null;
+  private firstAwardDateFromRows(
+    rows: { actionType: AzActionType; kind: string; createdAt: Date }[],
+    actionType: AzActionType,
+  ) {
+    let earliest: Date | null = null;
+    for (const r of rows) {
+      if (r.actionType !== actionType || r.kind !== "INITIAL") continue;
+      if (!earliest || r.createdAt < earliest) earliest = r.createdAt;
+    }
+    return earliest;
   }
 
   private compareTieBreak(

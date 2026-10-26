@@ -12,9 +12,11 @@ export async function middleware(request: NextRequest) {
   const legacy = request.cookies.get(LEGACY_SESSION_COOKIE)?.value;
 
   const isPublic =
+    pathname === "/" ||
     pathname === "/login" ||
     pathname === "/privacy" ||
     pathname === "/certificate" ||
+    pathname === "/api/health" ||
     pathname === "/manifest.webmanifest" ||
     pathname === "/manifest.webmanifest/" ||
     pathname.startsWith("/_next") ||
@@ -30,6 +32,14 @@ export async function middleware(request: NextRequest) {
     if (token && !payload) res.cookies.delete(SESSION_COOKIE);
     return res;
   };
+
+  // Root: JWT-only bounce — never wait on Neon for the first paint.
+  if (pathname === "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = authed ? "/dashboard" : "/login";
+    url.search = "";
+    return withCleanup(NextResponse.redirect(url));
+  }
 
   if (!authed && !isPublic) {
     const url = request.nextUrl.clone();

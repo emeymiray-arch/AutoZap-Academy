@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { loginAction, type AuthState } from "@/app/actions/auth";
 import { BrandMark } from "@/components/brand/logo";
 import Link from "next/link";
@@ -9,6 +9,13 @@ const initial: AuthState = {};
 
 export default function LoginForm() {
   const [state, action, pending] = useActionState(loginAction, initial);
+
+  // Warm Neon + the US serverless isolate while the user types credentials.
+  useEffect(() => {
+    const ctrl = new AbortController();
+    void fetch("/api/health", { signal: ctrl.signal, cache: "no-store" }).catch(() => {});
+    return () => ctrl.abort();
+  }, []);
 
   return (
     <div className="az-glass-strong az-glass-glow relative w-full max-w-md p-5 sm:p-7">
