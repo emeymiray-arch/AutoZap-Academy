@@ -73,16 +73,24 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   if (!payload) return null;
 
   // Neon can briefly refuse connections while the compute wakes up.
-  const user = await withDbRetry(() =>
-    prisma.user.findUnique({
-      where: { id: payload.sub },
-      select: sessionSelect,
-    }),
-  );
-  if (!user) return null;
-  if (user.sessionVersion !== payload.v) return null;
-  if (user.about?.startsWith("[ARCHIVED]")) return null;
-  return user;
+  // Cap total wait so visitors never sit on a blank white tab forever.
+  try {
+    const user = await Promise.race([
+      withDbRetry(() =>
+        prisma.user.findUnique({
+          where: { id: payload.sub },
+          select: sessionSelect,
+        }),
+      ),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 12_000)),
+    ]);
+    if (!user) return null;
+    if (user.sessionVersion !== payload.v) return null;
+    if (user.about?.startsWith("[ARCHIVED]")) return null;
+    return user;
+  } catch {
+    return null;
+  }
 }
 
 export async function requireUser(): Promise<SessionUser> {

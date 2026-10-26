@@ -37,11 +37,9 @@ export async function middleware(request: NextRequest) {
     return withCleanup(NextResponse.redirect(url));
   }
 
-  if (authed && pathname === "/login") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    return withCleanup(NextResponse.redirect(url));
-  }
+  // Do not bounce /login → /dashboard from JWT alone. If Neon is waking,
+  // that caused an infinite redirect (white screen + stuck blue progress bar).
+  // Logged-in users hitting /login just see the form and can sign in again.
 
   return withCleanup(NextResponse.next());
 }
