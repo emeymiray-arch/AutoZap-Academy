@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { Role, User } from "@prisma/client";
-import { prisma } from "@server/db";
+import { prisma, withDbRetry } from "@server/db";
 import {
   createSessionToken,
   LEGACY_SESSION_COOKIE,
@@ -72,24 +72,13 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   const payload = await verifySessionToken(raw);
   if (!payload) return null;
 
-  // Neon can briefly refuse connections while the compute wakes up — retry once.
-  let user;
-  try {
-    user = await prisma.user.findUnique({
+  // Neon can briefly refuse connections while the compute wakes up.
+  const user = await withDbRetry(() =>
+    prisma.user.findUnique({
       where: { id: payload.sub },
       select: sessionSelect,
-    });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    if (!/Can't reach database server|P1001|Connection|ECONNREFUSED|ETIMEDOUT/i.test(message)) {
-      throw err;
-    }
-    await new Promise((r) => setTimeout(r, 1200));
-    user = await prisma.user.findUnique({
-      where: { id: payload.sub },
-      select: sessionSelect,
-    });
-  }
+    }),
+  );
   if (!user) return null;
   if (user.sessionVersion !== payload.v) return null;
   if (user.about?.startsWith("[ARCHIVED]")) return null;

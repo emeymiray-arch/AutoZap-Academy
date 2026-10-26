@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { prisma } from "@server/db";
+import { prisma, withDbRetry } from "@server/db";
 import {
   createUserSession,
   destroyUserSession,
@@ -35,7 +35,12 @@ export async function loginAction(_prev: AuthState, formData: FormData): Promise
     return { error: `Слишком много попыток. Подождите ${limited.retryAfterSec} сек.` };
   }
 
-  const user = await prisma.user.findUnique({ where: { email } });
+  let user;
+  try {
+    user = await withDbRetry(() => prisma.user.findUnique({ where: { email } }));
+  } catch {
+    return { error: "Сервер базы данных просыпается. Подождите 10–20 сек и попробуйте снова." };
+  }
   if (!user?.passwordHash || !verifyPassword(password, user.passwordHash)) {
     return { error: "Неверный email или пароль" };
   }
